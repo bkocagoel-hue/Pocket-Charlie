@@ -1,30 +1,27 @@
 #pragma once
 // ============================================================================
-//  Display - Kapselung der Bildschirmausgabe (M5.Display / M5GFX)
+//  Display - Kapselung screen-weiter Grundfunktionen (M5.Display / M5GFX)
 //
 //  Verantwortung (Single Responsibility Principle):
-//  - Kennt das Display und weiss, WIE gezeichnet wird.
-//  - Bietet der App semantische Methoden (z. B. showGreeting()), statt
-//    ueberall im Code direkte M5GFX-Aufrufe zu verstreuen.
+//  - Grundeinstellungen des Panels (Rotation, Helligkeit).
+//  - Screen-weite, statische Ausgaben wie der Boot-Screen.
 //
-//  Bewusst NICHT Aufgabe dieser Klasse:
-//  - App-Logik, Zustaende, Timing. Das Display "malt nur" - es entscheidet
-//    nicht, WANN oder WARUM etwas gezeichnet wird.
+//  Bewusst NICHT hier:
+//  - Charlies animiertes Gesicht -> das ist Aufgabe des Face-Moduls, das mit
+//    einem eigenen Off-Screen-Puffer (Canvas) flicker-frei rendert.
 // ============================================================================
 
 namespace pc {
 
 class Display {
  public:
-  // Display-spezifische Grundeinstellungen (Rotation, Text-Defaults).
-  // Voraussetzung: M5.begin() wurde bereits aufgerufen (siehe App::setup()).
+  // Panel-Grundeinstellungen. Voraussetzung: M5.begin() lief bereits.
   void begin();
 
-  // Zeichnet den statischen Hello-World-Screen aus Sprint 0.
-  void showGreeting();
+  // Kurzer Start-Bildschirm mit Name + Version (Sprint-1-Bootscreen).
+  void showBootScreen();
 
  private:
-  // Fuellt den Bildschirm mit der Hintergrundfarbe.
   void clear();
 };
 
