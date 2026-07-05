@@ -9,10 +9,10 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 *„Ein Blick sagt mehr als ein Absatz."*
 
 **Status:**
-- ✅ **Sprint 0 – Hardware-Basis** abgeschlossen · **v0.1.0** auf echter Hardware
-  („Hello Pocket Charlie" läuft, geflasht & verifiziert).
-- 🚧 **Sprint 1 – Charlie lebt visuell** in Arbeit: animiertes Gesicht,
-  Idle-Animation, Touch/Buttons.
+- ✅ **Sprint 0 – Hardware-Basis** · **v0.1.0 – Apple Pie 🥧** („Hello Pocket Charlie").
+- ✅ **Sprint 1 – Charlie lebt visuell** · **v0.2.0 – Brownie 🍫** (animiertes
+  Gesicht, Idle-Animation, Touch/Buttons — auf Hardware verifiziert).
+- ➡️ Als Nächstes: **Sprint 2 – Lokale Persönlichkeit**.
 
 > **MVP-Regel:** Kein Feature wird umgesetzt, bevor Display, Touch, WLAN und
 > eine einfache Charlie-Gesichtsanzeige stabil funktionieren.
@@ -129,7 +129,7 @@ dort ein Emotions-System skizziert. Sprint 1 wird dafür nicht erweitert.
 ## Roadmap (Kurzfassung)
 
 - **Phase 0 – Hardware-Basis** ✅
-- **Phase 1 – Charlie lebt visuell** 🚧 (Gesicht, Idle, Emotionen, Bootscreen)
+- **Phase 1 – Charlie lebt visuell** ✅ (Gesicht, Idle, Bootscreen; Emotionen folgen)
 - Phase 2 – Charlie reagiert (lokale Interaktion, Menülogik)
 - Phase 3 – Charlie denkt (KI-Backend; **keine API-Keys in der Firmware**)
 - Phase 4 – Charlie spricht (Sprachassistenz)

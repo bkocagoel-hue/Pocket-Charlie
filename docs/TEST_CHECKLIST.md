@@ -6,9 +6,9 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 
 ---
 
-## Sprint 1 – Charlie lebt visuell (v0.2.0-dev)
+## Sprint 1 – Charlie lebt visuell (v0.2.0 – Brownie 🍫)
 
-**Verifiziert am:** 2026-07-04 · **Gerät:** M5Stack CoreS3 (Upload-Port COM5)
+**Verifiziert am:** 2026-07-04 · **Gerät:** M5Stack CoreS3 (Upload-Port COM5) · **Release:** v0.2.0 – Brownie 🍫
 
 ### ✅ Ergebnis: Sprint 1 auf Hardware bestätigt
 - **Touch funktioniert** — Berührung wird zuverlässig erkannt.
@@ -30,7 +30,7 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 | 9  | Serial: Touch-Release-Log    | Serial Monitor                   | ✅ Log beim Loslassen |
 | 10 | Stabilität                   | ~2–3 min Laufzeit                | ✅ kein Freeze / Reboot |
 | 11 | **Buttons A/B/C**            | unteres Band antippen            | ✅ A/B/C lösen aus (verifiziert 2026-07-04) |
-| 12 | Button PWR (physisch)        | Power-Taste **kurz** drücken     | ⏳ offen – bitte testen (Log: `[Input] Button PWR (kurz)`) |
+| 12 | Button PWR (physisch)        | Power-Taste **kurz** drücken     | ◻️ optional (nicht release-relevant) – Log: `[Input] Button PWR (kurz)` |
 
 > Hinweis zu #12: Power-Taste nur **kurz** antippen. Langes Halten (~6 s) schaltet
 > den CoreS3 hardwareseitig aus.
@@ -49,7 +49,7 @@ Ursache (belegt aus dem installierten M5Unified-Quellcode):
 - Der CoreS3-Touch endet bei y ≈ 239 → die Bedingung `raw.y >= 240` wird nie
   erfüllt. (Beim Core2 reicht das Touchglas unter das Display, dort klappt es.)
 
-**Aktivierung (umgesetzt in v0.2.0-dev):** In `App::setup()` wird nach
+**Aktivierung (umgesetzt in v0.2.0):** In `App::setup()` wird nach
 `M5.begin()` ein Touch-Band gesetzt:
 ```cpp
 M5.setTouchButtonHeight(config::kTouchButtonHeight);   // 40 px Band unten

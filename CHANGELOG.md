@@ -7,7 +7,13 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [Unreleased] – Sprint 1: Charlie lebt visuell
+## [Unreleased]
+
+_Noch keine Änderungen. Als Nächstes: Sprint 2 – Lokale Persönlichkeit._
+
+---
+
+## [0.2.0] – 2026-07-04 – Brownie 🍫 · Sprint 1: Charlie lebt visuell
 
 ### Added
 - **`Input`-Modul** – kapselt Touchscreen und Buttons (BtnA/B/C, PWR) als
@@ -24,21 +30,27 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ### Changed
 - `Display`-Modul: `showGreeting()` → `showBootScreen()` (screen-weite
   Grundfunktionen; das Gesicht rendert jetzt das `Face`-Modul).
-- Firmware-Version im Build auf `0.2.0-dev` angehoben.
+- Firmware-Version auf `0.2.0` gesetzt (Release-Stand).
 
 ### Fixed
 - Buttons A/B/C auf dem CoreS3 aktiviert (`M5.setTouchButtonHeight()` in
   `setup()`). Ohne dieses Touch-Band wären A/B/C inaktiv (Default-Höhe 0).
   Hintergrund: [docs/LESSONS_LEARNED.md](docs/LESSONS_LEARNED.md) #7.
 
+### Verified
+- Auf echter Hardware (M5Stack CoreS3, 2026-07-04): Touch, Blick folgt
+  Touchposition, Blinzeln, Buttons A/B/C — bestätigt. Keine Freezes, keine
+  Reboots, kein Flackern. Details: [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md).
+
 ### Notes
-- Blinzelrate, Blick-Energie usw. sind bewusst als Parameter (Konstanten in
-  `Face.cpp`) ausgelegt und werden an die **Grundpersönlichkeit** (Notion)
-  angepasst, sobald diese definiert ist.
+- **Grundpersönlichkeit v0.1** ist definiert und dokumentiert
+  ([docs/PERSONALITY.md](docs/PERSONALITY.md)); die Idle-Animation ist bereits
+  charakter-parametrisiert. Ein Emotions-System ist als nächster Architektur-
+  Schritt skizziert, aber **nicht** Teil dieses Releases.
 
 ---
 
-## [0.1.0] – 2026-07-03 – Sprint 0: Hardware-Basis
+## [0.1.0] – 2026-07-03 – Apple Pie 🥧 · Sprint 0: Hardware-Basis
 
 Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
@@ -63,5 +75,6 @@ Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
 ---
 
-_Vergleichslinks (Unreleased/0.1.0) werden ergänzt, sobald das Repository
-online (z. B. auf GitHub) verfügbar ist._
+[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/releases/tag/v0.1.0
