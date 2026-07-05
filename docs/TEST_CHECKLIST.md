@@ -10,6 +10,13 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 
 **Verifiziert am:** 2026-07-04 · **Gerät:** M5Stack CoreS3 (Upload-Port COM5)
 
+### ✅ Ergebnis: Sprint 1 auf Hardware bestätigt
+- **Touch funktioniert** — Berührung wird zuverlässig erkannt.
+- **Blick folgt der Touchposition** — Charlie schaut zur zuletzt berührten Stelle.
+- **Blinzeln funktioniert** — das Idle-Blinzeln läuft.
+- **Buttons A/B/C funktionieren** — die Touch-Zonen am unteren Rand lösen A/B/C aus.
+- **Keine Freezes · keine Reboots · kein Flackern** — stabil über die Laufzeit.
+
 | #  | Testfall                     | Methode                          | Ergebnis |
 |----|------------------------------|----------------------------------|----------|
 | 1  | Upload / Flash               | `pio run -t upload`              | ✅ erfolgreich |

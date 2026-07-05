@@ -4,6 +4,10 @@ Ein kleiner, charmanter **Desktop-Begleiter** auf Basis des **M5Stack CoreS3**.
 Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 (Inspiriert von StackChan, aber kein Nachbau.)
 
+**Charakter:** Charlies Grundpersönlichkeit ist in
+[docs/PERSONALITY.md](docs/PERSONALITY.md) beschrieben — Leitsatz:
+*„Ein Blick sagt mehr als ein Absatz."*
+
 **Status:**
 - ✅ **Sprint 0 – Hardware-Basis** abgeschlossen · **v0.1.0** auf echter Hardware
   („Hello Pocket Charlie" läuft, geflasht & verifiziert).
@@ -116,8 +120,9 @@ pio device monitor
 4. **Charlie wirkt „lebendig"** — ✅ zufälliges Blinzeln + wandernder Blick +
    Reaktion auf Berührung.
 
-*Nächster Feinschliff:* Grundpersönlichkeit definieren (Notion) → Animations-
-Parameter darauf abstimmen; danach erste Emotionen (neutral/happy/müde …).
+*Nächster Feinschliff:* Grundpersönlichkeit ist in v0.1 definiert
+([docs/PERSONALITY.md](docs/PERSONALITY.md)); als nächster möglicher Schritt ist
+dort ein Emotions-System skizziert. Sprint 1 wird dafür nicht erweitert.
 
 ---
 
@@ -134,5 +139,6 @@ Backlog, Sprints & Entscheidungen: **Notion-Workspace „Pocket Charlie HQ"**.
 ## Dokumentation
 
 - [CHANGELOG.md](CHANGELOG.md) — Versionen & Änderungen
+- [docs/PERSONALITY.md](docs/PERSONALITY.md) — Charlies Grundpersönlichkeit (Charakter, Tonfall, Emotionen)
 - [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md) — manuelle Hardware-Verifikation
 - [docs/LESSONS_LEARNED.md](docs/LESSONS_LEARNED.md) — Stolpersteine & Lösungen
