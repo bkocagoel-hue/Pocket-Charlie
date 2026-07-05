@@ -142,3 +142,4 @@ Backlog, Sprints & Entscheidungen: **Notion-Workspace „Pocket Charlie HQ"**.
 - [docs/PERSONALITY.md](docs/PERSONALITY.md) — Charlies Grundpersönlichkeit (Charakter, Tonfall, Emotionen)
 - [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md) — manuelle Hardware-Verifikation
 - [docs/LESSONS_LEARNED.md](docs/LESSONS_LEARNED.md) — Stolpersteine & Lösungen
+- [docs/SPRINT_2_PLAN.md](docs/SPRINT_2_PLAN.md) — Plan für **Sprint 2 – Lokale Persönlichkeit** (Next)
