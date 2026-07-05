@@ -102,6 +102,12 @@ void Face::blinkNow() {
   }
 }
 
+void Face::setEmotion(Emotion e) {
+  // Sprint 2 (Backlog-Item 2): Emotion nur speichern. Das emotionsabhaengige
+  // Rendering folgt spaeter; Neutral entspricht exakt dem bisherigen Verhalten.
+  emotion_ = e;
+}
+
 void Face::lookAt(std::int16_t x, std::int16_t y) {
   const float cx = screenW_ * 0.5f;
   const float cy = screenH_ * 0.5f;

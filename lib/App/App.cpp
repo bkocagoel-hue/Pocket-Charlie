@@ -26,6 +26,7 @@ void App::setup() {
 
   input_.begin();
   face_.begin(M5.Display.width(), M5.Display.height());
+  persona_.begin();
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
   //    (Blockierendes delay ist hier bewusst ok: einmalig, in setup().)
@@ -45,6 +46,8 @@ void App::loop() {
   const std::uint32_t now = millis();
   if (now - lastFrameMs_ >= config::kFrameIntervalMs) {
     lastFrameMs_ = now;
+    persona_.update(now);
+    face_.setEmotion(persona_.current());
     face_.update(now);
     face_.render();
   }

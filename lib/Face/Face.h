@@ -23,6 +23,8 @@
 
 #include <M5Unified.h>  // fuer M5Canvas
 
+#include "Emotion.h"    // Sprint 2: Emotions-Modell (Vorbereitung, noch ungenutzt)
+
 namespace pc {
 
 class Face {
@@ -40,6 +42,9 @@ class Face {
   void lookAt(std::int16_t x, std::int16_t y);  // Blick zu einem Punkt lenken
   void blinkNow();                              // sofortiges Blinzeln ausloesen
 
+  // --- Emotion (Sprint 2) ---
+  void setEmotion(Emotion e);  // aktive Grundstimmung setzen (Neutral = Default)
+
  private:
   void scheduleNextBlink(std::uint32_t nowMs);
   void scheduleNextGaze(std::uint32_t nowMs);
@@ -50,6 +55,8 @@ class Face {
   std::int16_t screenW_ = 0;
   std::int16_t screenH_ = 0;
   bool ready_ = false;
+
+  Emotion emotion_ = Emotion::Neutral;  // aktive Grundstimmung (Sprint 2)
 
   // Blinzeln
   bool blinking_ = false;
