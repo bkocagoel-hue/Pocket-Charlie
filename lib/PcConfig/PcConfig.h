@@ -26,10 +26,10 @@ namespace config {
 
 // --- Projekt-Metadaten ---------------------------------------------------
 constexpr const char* kAppName     = "Pocket Charlie";
-constexpr const char* kAppVersion  = "0.5.0-dev";  // Sprint 4 in Arbeit (Eclair)
+constexpr const char* kAppVersion  = "0.5.0";  // Sprint 4 Release (Eclair)
 // Codename bewusst ASCII ("Eclair" statt "Éclair"): Standard-Font des Displays
 // kann kein É; Akzent + ⚡ gehoeren in Docs/Release-Texte.
-constexpr const char* kAppCodename = "Eclair";      // Release-Arbeitstitel (Sprint 4)
+constexpr const char* kAppCodename = "Eclair";  // Release-Codename (v0.5.0)
 
 // --- Boot-Screen (Sprint 1) ----------------------------------------------
 constexpr const char*    kBootHint     = "Charlie wacht auf ...";

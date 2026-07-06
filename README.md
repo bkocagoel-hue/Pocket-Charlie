@@ -13,13 +13,13 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 - ✅ **Sprint 1 – Charlie lebt visuell** · **v0.2.0 – Brownie 🍫** (Gesicht, Idle, Touch/Buttons).
 - ✅ **Sprint 2 – Lokale Persönlichkeit** · **v0.3.0 – Cheesecake 🍰** (Emotion Engine v1:
   Neutral/Happy/Tired/Sleeping/Thoughtful/Annoyed — auf Hardware verifiziert).
-- ✅ **Sprint 3 – Lokale Interaktion** · **v0.4.0-dev – Donut 🍩** (Button-Navigation,
-  lokale Widgets Face/Clock/Mood/Info, Mood light, Microcopy, Augenbrauen —
-  hardware-verifiziert; **Release ausstehend**).
-- 🔄 **Sprint 4 – Online Widgets v1** · **v0.5.0-dev – Éclair ⚡** (in Arbeit, Branch
-  `sprint-4-eclair-online-widgets`): optionales WLAN, lokale Bridge (`/health`,
-  `/thought`), Emotion Expansion v2, Expression Pack v1 — **local-first**, keine
-  API-Keys in der Firmware, noch keine echte KI.
+- ✅ **Sprint 3 – Lokale Interaktion** · **Donut 🍩** — interner Meilenstein
+  (Button-Navigation, lokale Widgets, Mood light, Microcopy, Augenbrauen); **nicht
+  separat released**, in **v0.5.0** enthalten.
+- ✅ **Sprint 4 – Online Widgets v1** · **v0.5.0 – Éclair ⚡** — optionales WLAN,
+  lokale Bridge (`/health`, `/thought`), Emotion Expansion v2, Expression Pack v1.
+  **local-first**, keine API-Keys in der Firmware, noch keine echte KI.
+  Hardware-verifiziert (M5Stack CoreS3).
 
 > **MVP-Regel:** Kein Feature wird umgesetzt, bevor Display, Touch, WLAN und
 > eine einfache Charlie-Gesichtsanzeige stabil funktionieren.
@@ -177,5 +177,5 @@ Backlog, Sprints & Entscheidungen: **Notion-Workspace „Pocket Charlie HQ"**.
 - [docs/LESSONS_LEARNED.md](docs/LESSONS_LEARNED.md) — Stolpersteine & Lösungen
 - [docs/SPRINT_2_PLAN.md](docs/SPRINT_2_PLAN.md) — Sprint 2 – Lokale Persönlichkeit (✅ v0.3.0)
 - [docs/SPRINT_3_PLAN.md](docs/SPRINT_3_PLAN.md) — Sprint 3 – Lokale Interaktion (Donut, ✅ umgesetzt)
-- [docs/SPRINT_4_PLAN.md](docs/SPRINT_4_PLAN.md) — Sprint 4 – Éclair: Online Widgets v1 (aktiv)
+- [docs/SPRINT_4_PLAN.md](docs/SPRINT_4_PLAN.md) — Sprint 4 – Éclair: Online Widgets v1 (✅ v0.5.0)
 - [backend/pocket-charlie-bridge/README.md](backend/pocket-charlie-bridge/README.md) — lokale Bridge (Start, Endpunkte)

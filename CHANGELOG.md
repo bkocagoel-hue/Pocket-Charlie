@@ -7,14 +7,16 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [Unreleased] – v0.5.0-dev – Éclair ⚡ · Sprint 4: Online Widgets v1
+## [0.5.0] – 2026-07-06 – Éclair ⚡ · Sprint 4: Online Widgets v1
 
-> Arbeitsstand auf Branch `sprint-4-eclair-online-widgets`, **kein** Release.
-> **Guardrail-Wechsel, aber local-first:** WLAN + lokale Bridge jetzt erlaubt;
-> ohne beides läuft Charlie unverändert lokal. **Keine API-Keys in der
+> Erster öffentlicher Release nach **Cheesecake v0.3.0**. **Donut (Sprint 3) war
+> ein interner Meilenstein und ist in dieser Version enthalten** — es gab
+> bewusst **kein** separates `v0.4.0`-Release.
+> **Guardrail-Wechsel, aber local-first:** WLAN + lokale Bridge sind jetzt
+> möglich; ohne beides läuft Charlie unverändert lokal. **Keine API-Keys in der
 > Firmware, keine echte KI** — `/thought` ist bewusst statisch/mock.
 
-### Added
+### Added — Online (Sprint 4)
 - **Optionale WLAN-Schicht** (`lib/Network/NetworkManager`) — non-blocking FSM
   (`off/trying/online/offline`), 15-s-Timeout, max. 3 Auto-Retries mit Backoff,
   manueller Retry per BtnB. Secrets-Handling: `PcSecrets.example.h` (Vorlage im
@@ -25,6 +27,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   `GET /health`, `GET /thought` (kurze statische Sätze); README mit Setup.
 - **OnlineClient** (`lib/Online/`) — HTTP im FreeRTOS-Task auf Core 0, 2-s-
   Timeout, kein UI-Freeze; charmante Fallbacks (`offline / still me`).
+
+### Added — Persönlichkeit & Ausdruck (Sprint 4)
 - **Emotion Expansion v2** — Curious/Confused/Excited/Sad/WakingUp
   freigeschaltet (Namen, Trigger, Microcopy). Online-Ereignisse als kurze
   emotionale Momente: verbindet → Excited, Fehler → Confused, Fehlerserie →
@@ -33,28 +37,12 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   Thoughtful/Annoyed/Curious/Tired×2), Onset-Akzent beim Emotionswechsel,
   seltene Neutral-Micro-Expressions; Sleeping bleibt bewusst ruhig.
 
-### Verified
-- E2 (WLAN), E3 (Bridge `/health`), E4A (Thought), E4B (Emotionen), E4C
-  (Expressions) einzeln auf Hardware verifiziert (M5Stack CoreS3, 2026-07-06).
-  Voller Gesamtdurchlauf vor Release: offen (siehe TEST_CHECKLIST).
-
-### Out of Scope (bewusst)
-- Keine echte KI, kein Wetter, kein NTP, kein Audio, keine Cloud/Accounts,
-  keine API-Keys/Secrets im Repo.
-
----
-
-## [Unreleased] – v0.4.0-dev – Donut 🍩 · Sprint 3: Lokale Interaktion (Release ausstehend)
-
-> Hardware-verifizierter Stand auf `main`, noch **kein** Release/Tag. Sprint 3
-> blieb **vollständig lokal**: kein WLAN, keine KI, kein Backend, kein Audio.
-
-### Added
+### Added — enthaltener interner Meilenstein: Donut (Sprint 3)
 - **`InputContext`** (`lib/Interaction/`) – klassifiziert den Eingabe-Snapshot zu
   lokalen Intents (SingleTap/RapidTap, BtnA/B/C, PWR).
-- **Button-Menüführung + lokale Widgets** – Screens **Face · Clock/Uptime · Mood ·
-  Info** (umlaufend). `BtnA`/`BtnC` navigieren, `BtnB` = kontextuelle Aktion
-  (Face → Thoughtful; sonst kurze `ok`-Rückmeldung). Touch bleibt emotional.
+- **Button-Menüführung + lokale Widgets** – Screens Face · Clock/Uptime · Mood ·
+  Info (umlaufend); `BtnA`/`BtnC` navigieren, `BtnB` = kontextuelle Aktion.
+  Touch bleibt emotionale Interaktion.
 - **Mood light** – dezente, langfristige Grundstimmung (High/Neutral/Low) mit
   Hysterese; färbt die Idle-Microcopy.
 - **Microcopy / Gedankenblasen** – sehr kurze, seltene lokale Sprüche.
@@ -62,16 +50,21 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   (weich interpoliert, kein Flackern), die Emotionen lesbarer machen.
 
 ### Changed
-- Firmware-Version auf `0.4.0-dev`. Schnurrbart bleibt deaktiviert und ist auf ein
-  **optionales späteres Feature / Easter Egg / Skin** zurückgestuft
-  (`config::kEnableMoustache`, Default `false`; Architektur bleibt erhalten).
+- Firmware-Version auf `0.5.0` (Release-Stand); Codename `Eclair` (Display-ASCII).
+- Schnurrbart bleibt deaktiviert / **optionales späteres Feature / Easter Egg /
+  Skin** (`config::kEnableMoustache`, Default `false`; Architektur bleibt erhalten).
 
-### Docs
-- `PERSONALITY.md` auf Donut-Stand; `SPRINT_3_PLAN.md` (Einheiten 4–7 inkl. Local
-  Widgets v1); `TEST_CHECKLIST.md` um den Donut-Durchlauf ergänzt.
+### Verified
+- Sprint-4-Einheiten E2 (WLAN), E3 (Bridge `/health`), E4A (Thought), E4B
+  (Emotionen), E4C (Expressions) einzeln auf Hardware verifiziert; **voller
+  Éclair-Gesamtdurchlauf bestanden** (M5Stack CoreS3, 2026-07-06): lokaler +
+  Online-Modus, Fallback/Recovery, 11/11 Emotionen, Expression Pack, kein
+  Freeze/Reboot/Flackern. Donut-Funktionen (Sprint 3) ebenfalls verifiziert.
+  Details: [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md).
 
 ### Out of Scope (bewusst)
-- Kein WLAN, keine KI, kein Backend/Cloud, kein Audio, keine API-Keys/Secrets.
+- Keine echte KI, kein Wetter, kein NTP, kein Audio, keine Cloud/Accounts,
+  keine API-Keys/Secrets im Repo.
 
 ---
 
@@ -165,7 +158,7 @@ Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
 ---
 
-[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.3.0...HEAD
+[0.5.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.3.0...v0.5.0
 [0.3.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/releases/tag/v0.1.0
