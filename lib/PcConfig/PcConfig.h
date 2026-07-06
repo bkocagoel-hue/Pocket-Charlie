@@ -41,11 +41,18 @@ constexpr std::uint8_t kBrightness = 128;  // 0..255
 // (=> A/B/C inaktiv). Wir setzen eine Bandhoehe, damit A/B/C nutzbar sind.
 constexpr std::uint16_t kTouchButtonHeight = 40;  // Pixel am unteren Rand
 
-// --- Farben im RGB565-Format ---------------------------------------------
-// M5GFX nutzt 16-Bit-Farben: 5 Bit Rot, 6 Bit Gruen, 5 Bit Blau.
+// --- Farben im RGB565-Format (Charlie-Theme) -----------------------------
+// M5GFX nutzt 16-Bit-Farben (RGB565). Gesicht bewusst reduziert: dunkler
+// Hintergrund + helle Linien; Violett ist der Augen-/Identitaets-Akzent.
 constexpr std::uint16_t kColorBackground = 0x0000;  // Schwarz
-constexpr std::uint16_t kColorText       = 0xFFFF;  // Weiss
-constexpr std::uint16_t kColorAccent     = 0x07FF;  // Cyan (Charlie-Akzent)
+constexpr std::uint16_t kColorText       = 0xFFFF;  // Weiss (Text/Bootscreen)
+constexpr std::uint16_t kColorAccent     = 0x07FF;  // Cyan (nur Bootscreen)
+
+// Gesichts-Theme (leicht anpassbar):
+constexpr std::uint16_t kColorFace  = 0xFFFF;  // Weiss: Mund + Schnurrbart
+constexpr std::uint16_t kColorEye   = 0x8B77;  // warmes Violett: Augen/Iris
+constexpr std::uint16_t kColorPupil = 0xFFFF;  // Weiss: Pupille
+constexpr std::uint16_t kColorGlint = 0xFFFF;  // Weiss: Glanzpunkt
 
 // --- Game-Loop / Animation -----------------------------------------------
 // Ziel-Bildrate der nicht-blockierenden Hauptschleife.

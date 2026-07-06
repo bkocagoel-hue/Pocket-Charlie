@@ -114,3 +114,21 @@ Je Emotion: **Auslöser → erwartetes Bild → Serial-Log**.
 *Hinweis zur Einordnung:* Notion-Sprint 2 (Roadmap-Phase 2 „Charlie reagiert")
 wird hier bewusst auf den **Persönlichkeits-/Emotions-Teil** fokussiert;
 Menü- und Interaktionslogik bleiben für einen späteren Sprint.
+
+---
+
+## Emotion Engine v1 — Stand & offene TODOs
+
+**Umgesetzt (v1):** 5 Kern-Emotionen sichtbar (Neutral/Happy/Tired/Thoughtful/
+Annoyed), 6 weitere im Enum vorbereitet mit Stil-Näherung
+(Curious/Sad/Sleeping/WakingUp/Excited/Confused), datengetriebener Emotion→Stil
+mit weichen Übergängen, lokale Trigger (Boot & Touch→Happy, Rapid-Tap→Annoyed,
+Inaktivität→Tired, BtnB→Thoughtful), violette Iris + statischer Pixel-Schnurrbart
+(mit Happy-/Tired-Shift).
+
+**Noch offen (bewusst zurückgestellt):**
+- Eigene Feinanimationen für die 6 vorbereiteten Emotionen.
+- Schnurrbart-Animation für alle Emotionen (v1: statisch + Happy/Tired-Shift).
+- Idle-Easter-Eggs (Pixel-Herz, Sternaugen, Glitch, 404, ?, !) — nur Platzhalter im Code.
+- Gedankenblasen-Ebene (?, !, ..., ☕, ❤, 💤) — nur architektonisch vorgesehen.
+- Mood-Engine (langfristiger Zustand über kurzfristiger Emotion) — Architektur offen gehalten.

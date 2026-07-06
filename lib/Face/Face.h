@@ -1,76 +1,68 @@
 #pragma once
 // ============================================================================
-//  Face - Charlies animiertes Gesicht (Augen + Mund) mit Idle-Animation
+//  Face - Charlies animiertes Gesicht (Augen + Schnurrbart + Mund)
 //
-//  Verantwortung:
-//  - Haelt den Animationszustand (Blinzeln, Blickrichtung, "Atmen").
-//  - Rendert das Gesicht flicker-frei ueber einen Off-Screen-Puffer (M5Canvas
-//    im PSRAM): erst komplett in den Puffer zeichnen, dann in EINEM Rutsch auf
-//    das Display schieben. So gibt es kein Flackern durch Teil-Neuzeichnungen.
-//
-//  Trennung update()/render():
-//  - update(now): schreibt NUR den Zustand fort (Logik, zeitbasiert).
-//  - render():    zeichnet den aktuellen Zustand (keine Logik).
-//  Das haelt die Animation deterministisch und spaeter testbar.
-//
-//  Charakter-Parametrisierung:
-//  Blinzelrate, Blick-Energie usw. liegen als Konstanten in Face.cpp. Sobald
-//  die "Grundpersoenlichkeit" (Notion) definiert ist, justieren wir dort die
-//  Werte - ohne strukturelle Aenderungen.
+//  Sprint 2: emotionsabhaengiges, datengetriebenes Rendering. Eine Emotion
+//  liefert einen Parametersatz (EmotionStyle, in Face.cpp), der weich
+//  interpoliert wird (sanfte Uebergaenge). update() schreibt nur Zustand fort,
+//  render() zeichnet - beides ueber millis(), ohne delay().
 // ============================================================================
 
 #include <cstdint>
 
 #include <M5Unified.h>  // fuer M5Canvas
 
-#include "Emotion.h"    // Sprint 2: Emotions-Modell (Vorbereitung, noch ungenutzt)
+#include "Emotion.h"
 
 namespace pc {
 
 class Face {
  public:
-  // Legt den Canvas an (Bildschirmgroesse). Voraussetzung: M5.begin() lief.
   void begin(std::int16_t screenW, std::int16_t screenH);
-
-  // Animationszustand fortschreiben (now = millis()).
   void update(std::uint32_t nowMs);
-
-  // Aktuellen Zustand auf das Display bringen.
   void render();
 
   // --- Interaktion (Sprint 1) ---
-  void lookAt(std::int16_t x, std::int16_t y);  // Blick zu einem Punkt lenken
-  void blinkNow();                              // sofortiges Blinzeln ausloesen
+  void lookAt(std::int16_t x, std::int16_t y);
+  void blinkNow();
 
   // --- Emotion (Sprint 2) ---
-  void setEmotion(Emotion e);  // aktive Grundstimmung setzen (Neutral = Default)
+  void setEmotion(Emotion e);  // Ziel-Emotion; Stil wird sanft nachgezogen
 
  private:
   void scheduleNextBlink(std::uint32_t nowMs);
   void scheduleNextGaze(std::uint32_t nowMs);
   void drawEye(std::int16_t cx, std::int16_t cy, float openAmount,
                std::int16_t gazeX, std::int16_t gazeY);
+  void drawMouth(std::int16_t cx, std::int16_t baseY, float curve);
+  void drawMustache(std::int16_t cx, std::int16_t baseY, float lift);
 
-  M5Canvas canvas_;  // Off-Screen-Puffer (PSRAM)
+  M5Canvas canvas_;
   std::int16_t screenW_ = 0;
   std::int16_t screenH_ = 0;
   bool ready_ = false;
-
-  Emotion emotion_ = Emotion::Neutral;  // aktive Grundstimmung (Sprint 2)
 
   // Blinzeln
   bool blinking_ = false;
   std::uint32_t blinkStartedAt_ = 0;
   std::uint32_t nextBlinkAt_ = 0;
-  float eyeOpen_ = 1.0f;  // 0 = geschlossen, 1 = offen
+  float eyeOpen_ = 1.0f;
 
-  // Blickrichtung (Ziel + sanft nachgefuehrter Ist-Wert)
+  // Blick (Gaze)
   float gazeX_ = 0.0f, gazeY_ = 0.0f;
   float gazeTargetX_ = 0.0f, gazeTargetY_ = 0.0f;
   std::uint32_t nextGazeChangeAt_ = 0;
 
-  // "Atmen" (leichtes vertikales Wippen)
+  // Atmen
   float bobY_ = 0.0f;
+
+  // Emotion + weich interpolierter Stil
+  Emotion emotion_ = Emotion::Neutral;
+  float sEyeOpen_ = 1.0f;
+  float sMouthCurve_ = 0.0f;
+  float sMustache_ = 0.0f;
+  float sBlinkMul_ = 1.0f;
+  std::uint8_t gazeMode_ = 0;
 };
 
 }  // namespace pc

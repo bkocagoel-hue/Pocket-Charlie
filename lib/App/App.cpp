@@ -44,9 +44,10 @@ void App::loop() {
   handleInput();     // Reaktionen ausloesen
 
   const std::uint32_t now = millis();
+  persona_.update(now, input_);  // jede Runde: Eingabe-Flanken nicht verpassen
+
   if (now - lastFrameMs_ >= config::kFrameIntervalMs) {
     lastFrameMs_ = now;
-    persona_.update(now);
     face_.setEmotion(persona_.current());
     face_.update(now);
     face_.render();

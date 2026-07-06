@@ -1,16 +1,21 @@
 #pragma once
 // ============================================================================
-//  Persona - haelt Charlies aktuelle Grundstimmung (Emotion)
+//  Persona - haelt Charlies aktuelle Grundstimmung (Emotion) und waehlt sie
+//  aus einfachen, lokalen Regeln (Zeit + Eingabe). Keine KI, kein Netz.
 //
-//  Sprint 2 (Backlog-Item 3): minimal. Persona haelt nur den Zustand und gibt
-//  vorerst ausschliesslich Neutral zurueck - noch KEINE Trigger. Die Regeln
-//  (Inaktivitaet -> Tired, Touch -> Happy, BtnB-Hold -> Thoughtful, Piesacken
-//  -> Annoyed) kommen in spaeteren Schritten.
+//  Trigger (Sprint 2): Boot -> Happy; Touch -> Happy; schnelles Dauer-Tippen
+//  -> Annoyed; Inaktivitaet -> Tired; BtnB -> Thoughtful. Alles nicht-blockierend
+//  ueber millis(), mit automatischem Rueckfall auf Neutral.
+//
+//  TODO (spaeter): laengerfristige "Mood"-Ebene ueber die kurzfristige Emotion
+//  legen (ruhig/gelangweilt/neugierig ...). Die Architektur ist dafuer offen -
+//  Mood wuerde hier den Neutral-Grundzustand ersetzen. Siehe SPRINT_2_PLAN.md.
 // ============================================================================
 
 #include <cstdint>
 
 #include "Emotion.h"
+#include "Input.h"
 
 namespace pc {
 
@@ -18,15 +23,24 @@ class Persona {
  public:
   void begin();
 
-  // Schreibt den Stimmungszustand fort (now = millis()).
-  // Item 3: noch ohne Trigger -> bleibt Neutral.
-  void update(std::uint32_t nowMs);
+  // now = millis(); input = aktueller Eingabe-Snapshot (fuer lokale Trigger).
+  // Jede Loop-Runde aufrufen, damit keine Eingabe-Flanke verpasst wird.
+  void update(std::uint32_t nowMs, const Input& input);
 
-  // Aktuelle Grundstimmung.
   Emotion current() const { return current_; }
 
  private:
+  void setTransient(Emotion e, std::uint32_t nowMs, std::uint32_t durMs);
+
   Emotion current_ = Emotion::Neutral;
+  Emotion lastLogged_ = Emotion::Neutral;  // fuer Change-Log (keine Log-Flut)
+  bool started_ = false;
+  std::uint32_t transientUntil_ = 0;  // 0 = kein transienter Zustand aktiv
+  std::uint32_t lastActivityMs_ = 0;
+
+  // Rapid-Tap-Erkennung (-> Annoyed)
+  std::uint16_t tapCount_ = 0;
+  std::uint32_t tapWindowStart_ = 0;
 };
 
 }  // namespace pc
