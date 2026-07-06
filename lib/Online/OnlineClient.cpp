@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 
 #include <cstdio>
+#include <cstring>
 
 // PcConfig.h verankert lib/PcConfig im Include-Pfad dieses Moduls, damit
 // __has_include("PcSecrets.h") die (gitignorte) Secrets-Datei findet -
@@ -32,6 +33,25 @@ constexpr BaseType_t    kTaskCore       = 0;    // Arduino-Loop laeuft auf Core 
 bool hasBridgeUrl() {
   return secrets::kBridgeUrl != nullptr && secrets::kBridgeUrl[0] != '\0';
 }
+
+// Minimales "JSON-Parsing": extrahiert den Wert der "text"-Property.
+// Bewusst KEINE JSON-Bibliothek - die Bridge gehoert uns, das Format ist
+// stabil und die Saetze enthalten keine Escapes/Anfuehrungszeichen.
+bool extractText(const char* json, char* out, std::size_t outSize) {
+  const char* p = strstr(json, "\"text\"");
+  if (p == nullptr) return false;
+  p = strchr(p + 6, ':');
+  if (p == nullptr) return false;
+  p = strchr(p, '"');
+  if (p == nullptr) return false;
+  ++p;
+  std::size_t i = 0;
+  while (*p != '\0' && *p != '"' && i + 1 < outSize) {
+    out[i++] = *p++;  // laengere Texte werden hart gekuerzt (kein Crash)
+  }
+  out[i] = '\0';
+  return i > 0;
+}
 }  // namespace
 
 void OnlineClient::begin() {
@@ -59,18 +79,32 @@ void OnlineClient::begin() {
 
 void OnlineClient::requestPing() {
   if (task_ == nullptr) return;
-  const BridgeState s = state();
-  if (s == BridgeState::Disabled || s == BridgeState::Checking) return;
+  if (state() == BridgeState::Disabled || requestRunning()) return;
+  // Ein neuer Health-Check macht ein altes Thought-Ergebnis hinfaellig.
+  if (thoughtState() != ThoughtState::None) setThoughtState(ThoughtState::None);
   setState(BridgeState::Checking);
+  kind_.store(0, std::memory_order_relaxed);
+  xTaskNotifyGive(static_cast<TaskHandle_t>(task_));
+}
+
+void OnlineClient::requestThought() {
+  if (task_ == nullptr) return;
+  if (state() != BridgeState::Ok || requestRunning()) return;
+  setThoughtState(ThoughtState::Fetching);  // ab jetzt liest niemand thought_
+  kind_.store(1, std::memory_order_relaxed);
   xTaskNotifyGive(static_cast<TaskHandle_t>(task_));
 }
 
 void OnlineClient::reset() {
-  // Nur ein abgeschlossenes Ergebnis verwerfen; einen laufenden Ping nicht
+  // Nur abgeschlossene Ergebnisse verwerfen; einen laufenden Request nicht
   // anfassen (der Task schreibt sein Ergebnis gleich selbst).
   const BridgeState s = state();
   if (s == BridgeState::Ok || s == BridgeState::Down) {
     setState(BridgeState::Idle);
+  }
+  const ThoughtState ts = thoughtState();
+  if (ts == ThoughtState::Ok || ts == ThoughtState::Failed) {
+    setThoughtState(ThoughtState::None);
   }
 }
 
@@ -80,8 +114,12 @@ void OnlineClient::taskEntry(void* self) {
 
 void OnlineClient::taskLoop() {
   for (;;) {
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // schlaeft bis requestPing()
-    doPing();
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // schlaeft bis request...()
+    if (kind_.load(std::memory_order_relaxed) == 1) {
+      doThought();
+    } else {
+      doPing();
+    }
   }
 }
 
@@ -110,6 +148,46 @@ void OnlineClient::doPing() {
   }
 
   setState(ok ? BridgeState::Ok : BridgeState::Down);
+}
+
+void OnlineClient::doThought() {
+  char url[96];
+  std::snprintf(url, sizeof(url), "%s/thought", secrets::kBridgeUrl);
+
+  bool ok = false;
+  HTTPClient http;
+  http.setConnectTimeout(kHttpTimeoutMs);
+  http.setTimeout(kHttpTimeoutMs);
+  if (http.begin(url)) {
+    const int code = http.GET();
+    if (code == HTTP_CODE_OK) {
+      // Antwort ist winzig (< 100 B); Text extrahieren und hart kuerzen.
+      const String payload = http.getString();
+      ok = extractText(payload.c_str(), thought_, sizeof(thought_));
+      if (ok) {
+        Serial.printf("[Bridge] /thought -> ok: \"%s\"\n", thought_);
+      } else {
+        Serial.println("[Bridge] /thought -> Antwort ohne \"text\".");
+      }
+    } else {
+      Serial.printf("[Bridge] /thought -> down (%d: %s)\n", code,
+                    code < 0 ? HTTPClient::errorToString(code).c_str()
+                             : "HTTP-Fehler");
+    }
+    http.end();
+  } else {
+    Serial.println("[Bridge] /thought -> down (URL ungueltig).");
+  }
+
+  if (ok) {
+    thoughtSeq_.fetch_add(1, std::memory_order_relaxed);
+    setThoughtState(ThoughtState::Ok);
+  } else {
+    // Ehrlich bleiben: Thought scheiterte -> Bridge gilt als down; der
+    // naechste BtnB macht wieder einen /health-Ping.
+    setThoughtState(ThoughtState::Failed);
+    setState(BridgeState::Down);
+  }
 }
 
 const char* OnlineClient::stateName() const {

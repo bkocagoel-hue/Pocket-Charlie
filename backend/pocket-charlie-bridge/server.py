@@ -11,11 +11,24 @@
 # ============================================================================
 
 import json
+import random
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST = "0.0.0.0"  # im ganzen Heimnetz erreichbar (M5Stack nutzt die Laptop-IP)
 PORT = 8787
-VERSION = "0.1.0"
+VERSION = "0.2.0"
+
+# Kurze, statische lokale "Gedanken" (E4A: mock/static, keine KI, kein Key).
+# Displaytauglich halten: max. ~26 Zeichen, ruhig und charmant.
+THOUGHTS = [
+    "still here.",
+    "hello local.",
+    "tiny spark.",
+    "online-ish.",
+    "bridge says hi.",
+    "local heart.",
+    "beep. friendly.",
+]
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -26,6 +39,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(
                 {"ok": True, "service": "pocket-charlie-bridge",
                  "version": VERSION})
+        elif self.path == "/thought":
+            self._send_json({"text": random.choice(THOUGHTS)})
         else:
             self._send_json({"ok": False, "error": "unknown path"}, status=404)
 

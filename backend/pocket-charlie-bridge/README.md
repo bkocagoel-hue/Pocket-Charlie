@@ -20,13 +20,17 @@ py backend/pocket-charlie-bridge/server.py
 ```
 
 Der Server lauscht auf Port **8787** (alle Interfaces, `0.0.0.0`).
-Schnelltest im Browser auf dem Laptop: <http://localhost:8787/health>
+Schnelltest im Browser auf dem Laptop:
+<http://localhost:8787/health> · <http://localhost:8787/thought>
 
 ## Endpunkte
 
 | Endpunkt | Antwort |
 |---|---|
-| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.1.0"}` |
+| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.2.0"}` |
+| `GET /thought` | `{"text": "still here."}` — zufälliger kurzer Satz aus einer **lokalen, statischen** Liste (E4A: mock/static; keine KI, keine externen Requests, kein API-Key) |
+
+Unbekannte Pfade liefern `404`.
 
 ## Bridge-URL für den M5Stack konfigurieren
 

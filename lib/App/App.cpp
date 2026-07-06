@@ -95,7 +95,13 @@ void App::loop() {
     if (menu_.current() == Screen::Face) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
     } else if (menu_.current() == Screen::Online && network_.online()) {
-      online_.requestPing();  // Bridge-Ping; "checking" ist die Rueckmeldung
+      // Bridge ok -> Thought holen; sonst (unbekannt/down) erst /health pingen.
+      // "checking"/"waiting..." sind die sichtbare Rueckmeldung.
+      if (online_.state() == BridgeState::Ok) {
+        online_.requestThought();
+      } else {
+        online_.requestPing();
+      }
       screenRedraw_ = true;
     } else {
       if (menu_.current() == Screen::Online) {
@@ -167,11 +173,13 @@ void App::renderScreen(std::uint32_t nowMs) {
       screenRedraw_ = true;
     }
   }
-  // Online-Screen aktualisiert sich bei WiFi- oder Bridge-Statuswechsel
-  // (beide Zustaende kombiniert in einem Vergleichswert).
+  // Online-Screen aktualisiert sich bei WiFi-/Bridge-/Thought-Statuswechsel
+  // oder neuem Thought-Text (alles kombiniert in einem Vergleichswert).
   if (s == Screen::Online) {
-    const int ns = static_cast<int>(network_.state()) * 16 +
-                   static_cast<int>(online_.state());
+    const int ns = ((static_cast<int>(network_.state()) * 8 +
+                     static_cast<int>(online_.state())) * 8 +
+                    static_cast<int>(online_.thoughtState())) * 256 +
+                   online_.thoughtSeq();
     if (ns != lastNetState_) {
       lastNetState_ = ns;
       screenRedraw_ = true;
@@ -230,11 +238,33 @@ void App::renderOnlineWidget() {
     return;
   }
 
+  // Thought-Sicht (E4A) hat Vorrang vor der Health-Sicht.
+  const ThoughtState ts = online_.thoughtState();
+  if (ts == ThoughtState::Fetching) {
+    display_.showScreen("online", "waiting...", "");
+    return;
+  }
+  if (online_.state() == BridgeState::Checking) {
+    display_.showScreen("bridge", "checking", "");
+    return;
+  }
+  if (ts == ThoughtState::Ok) {
+    display_.showScreen("online", online_.thoughtText(), "B: again");
+    return;
+  }
+  if (ts == ThoughtState::Failed) {
+    // Charmanter Fallback statt Fehlermeldung; BtnB pingt danach /health.
+    display_.showScreen("online", "offline", "still me");
+    return;
+  }
+
+  // Health-Sicht (E3): ready/ok/down/no url.
   const char* sub = "";
   switch (online_.state()) {
-    case BridgeState::Idle: sub = "B: ping"; break;
-    case BridgeState::Down: sub = "B: ping"; break;
-    default:                break;  // checking/ok/no url: keine Sub-Zeile
+    case BridgeState::Idle: sub = "B: ping";    break;
+    case BridgeState::Ok:   sub = "B: thought"; break;
+    case BridgeState::Down: sub = "B: ping";    break;
+    default:                break;  // no url: keine Sub-Zeile
   }
   display_.showScreen("bridge", online_.stateName(),
                       flashActive_ ? "ok" : sub);

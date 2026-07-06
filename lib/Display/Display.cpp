@@ -2,6 +2,8 @@
 
 #include <M5Unified.h>
 
+#include <cstring>
+
 #include "PcConfig.h"
 
 namespace pc {
@@ -56,10 +58,12 @@ void Display::showScreen(const char* title, const char* mainText,
   // dezente violette Akzentlinie
   M5.Display.fillRect(cx - 42, 60, 84, 3, config::kColorEye);
 
-  // Hauptinfo gross, zentriert, weiss.
+  // Hauptinfo gross, zentriert, weiss. Laengere Texte (z. B. Online-Thought)
+  // automatisch kleiner, damit nichts abgeschnitten wird: Size 4 fasst ~13
+  // Zeichen (320 px / 24 px), Size 2 fasst ~26 Zeichen.
   M5.Display.setTextDatum(middle_center);
   M5.Display.setTextColor(config::kColorText, config::kColorBackground);
-  M5.Display.setTextSize(4);
+  M5.Display.setTextSize(std::strlen(mainText) > 13 ? 2 : 4);
   M5.Display.drawString(mainText, cx, cy + 4);
 
   // optionale Sub-Zeile darunter, klein.
