@@ -78,6 +78,13 @@ constexpr float kTwoPi       = 6.28318530718f;
 // --- Emotions-Stil (datengetrieben, weich interpolierbar) ---
 constexpr float kStyleLerp = 0.14f;
 
+// --- Expression Pack v1 (E4C) ---
+constexpr std::uint32_t kOnsetMs       = 450;    // Brauen-Akzent beim Wechsel
+constexpr float         kOnsetBoost    = 1.6f;   // Verstaerkung waehrend Onset
+constexpr std::uint32_t kMicroMs       = 1200;   // Dauer einer Idle-Micro-Regung
+constexpr std::uint32_t kMicroMinGapMs = 20000;  // Abstand zwischen Micro-Regungen
+constexpr std::uint32_t kMicroMaxGapMs = 45000;
+
 enum GazeMode : std::uint8_t { GazeIdle = 0, GazeUp = 1, GazeSide = 2 };
 
 struct EmotionStyle {
@@ -88,15 +95,28 @@ struct EmotionStyle {
   std::uint8_t gaze;
 };
 
-// Emotion -> Stil. Kern-Emotionen deutlich unterscheidbar; die vorbereiteten
-// Emotionen nutzen v1-Naeherungen (TODO: eigene Feinanimationen).
-EmotionStyle styleFor(Emotion e) {
+// Emotion -> Stil. Kern-Emotionen deutlich unterscheidbar.
+// Expression Pack v1 (E4C): einige Emotionen haben VARIANTEN (v) - beim
+// Betreten der Emotion zufaellig gewaehlt -> Charlie wirkt abwechslungsreicher,
+// ohne neue Zustaende. Sleeping/WakingUp bewusst variantenlos (Stabilitaet).
+EmotionStyle styleFor(Emotion e, std::uint8_t v) {
   switch (e) {
-    case Emotion::Happy:      return {0.95f,  0.90f,  1.0f, 1.0f, GazeIdle};
-    case Emotion::Tired:      return {0.45f, -0.20f, -1.0f, 1.9f, GazeIdle};
-    case Emotion::Thoughtful: return {1.00f,  0.00f,  0.0f, 1.2f, GazeUp};
-    case Emotion::Annoyed:    return {0.62f, -0.55f,  0.6f, 1.0f, GazeSide};
-    case Emotion::Curious:    return {1.00f,  0.25f,  0.3f, 0.9f, GazeSide};
+    case Emotion::Happy:
+      if (v == 1) return {0.62f, 0.55f, 1.0f, 1.2f, GazeIdle};  // weich/erleichtert
+      if (v == 2) return {0.72f, 0.65f, 1.0f, 1.0f, GazeSide};  // verschmitzt (smug)
+      return {0.95f,  0.90f,  1.0f, 1.0f, GazeIdle};            // strahlend
+    case Emotion::Tired:
+      if (v == 1) return {0.55f, -0.05f, -1.0f, 1.6f, GazeSide};  // gelangweilt
+      return {0.45f, -0.20f, -1.0f, 1.9f, GazeIdle};              // schwer
+    case Emotion::Thoughtful:
+      if (v == 1) return {0.75f, -0.15f, 0.0f, 1.1f, GazeSide};  // skeptisch
+      return {1.00f,  0.00f,  0.0f, 1.2f, GazeUp};               // klassisch
+    case Emotion::Annoyed:
+      if (v == 1) return {0.50f, -0.70f, 0.6f, 1.0f, GazeSide};  // deutlich
+      return {0.62f, -0.55f,  0.6f, 1.0f, GazeSide};             // leicht
+    case Emotion::Curious:
+      if (v == 1) return {1.00f, 0.35f, 0.3f, 0.8f, GazeSide};   // aktiv
+      return {1.00f,  0.25f,  0.3f, 0.9f, GazeIdle};             // sanft
     case Emotion::Sad:        return {0.70f, -0.80f, -1.0f, 1.3f, GazeIdle};
     case Emotion::Sleeping:   return {0.05f,  0.00f, -1.0f, 3.0f, GazeIdle};
     case Emotion::WakingUp:   return {0.55f,  0.10f, -0.5f, 1.5f, GazeIdle};
@@ -104,6 +124,18 @@ EmotionStyle styleFor(Emotion e) {
     case Emotion::Confused:   return {0.95f, -0.10f,  0.2f, 1.1f, GazeSide};
     case Emotion::Neutral:
     default:                  return {1.00f,  0.00f,  0.0f, 1.0f, GazeIdle};
+  }
+}
+
+// Anzahl der Expression-Varianten je Emotion (fuer die Zufallswahl).
+std::uint8_t variantCount(Emotion e) {
+  switch (e) {
+    case Emotion::Happy:      return 3;
+    case Emotion::Tired:
+    case Emotion::Thoughtful:
+    case Emotion::Annoyed:
+    case Emotion::Curious:    return 2;
+    default:                  return 1;
   }
 }
 
@@ -120,13 +152,24 @@ struct EyebrowStyle {
   bool  hidden;
 };
 
-EyebrowStyle eyebrowFor(Emotion e) {
+EyebrowStyle eyebrowFor(Emotion e, std::uint8_t v) {
   switch (e) {
-    case Emotion::Happy:      return { 3.0f, -1.5f, 0.0f, false};
-    case Emotion::Tired:      return {-3.0f,  1.0f, 0.0f, false};
-    case Emotion::Thoughtful: return { 1.0f,  0.0f, 4.0f, false};
-    case Emotion::Annoyed:    return {-1.0f,  6.0f, 0.0f, false};
-    case Emotion::Curious:    return { 4.0f, -1.0f, 1.5f, false};
+    case Emotion::Happy:
+      if (v == 1) return { 2.0f, -2.5f, 0.0f, false};  // weich/erleichtert
+      if (v == 2) return { 2.0f, -1.0f, 4.0f, false};  // eine Braue hoch (smug)
+      return { 3.0f, -1.5f, 0.0f, false};              // strahlend
+    case Emotion::Tired:
+      if (v == 1) return {-2.0f,  0.0f, 0.0f, false};  // gelangweilt-flach
+      return {-3.0f,  1.0f, 0.0f, false};              // schwer
+    case Emotion::Thoughtful:
+      if (v == 1) return { 0.0f,  2.0f, 4.5f, false};  // skeptisch (Braue + streng)
+      return { 1.0f,  0.0f, 4.0f, false};              // klassisch
+    case Emotion::Annoyed:
+      if (v == 1) return {-2.0f,  8.0f, 0.0f, false};  // deutlich
+      return {-1.0f,  6.0f, 0.0f, false};              // leicht
+    case Emotion::Curious:
+      if (v == 1) return { 5.0f, -1.5f, 2.5f, false};  // aktiv
+      return { 4.0f, -1.0f, 1.5f, false};              // sanft
     case Emotion::Sad:        return { 0.0f, -4.0f, 0.0f, false};
     case Emotion::Sleeping:   return {-2.0f,  0.0f, 0.0f, true };
     case Emotion::WakingUp:   return {-1.0f,  0.0f, 0.0f, false};
@@ -161,15 +204,16 @@ void Face::begin(std::int16_t screenW, std::int16_t screenH) {
   const std::uint32_t now = millis();
   scheduleNextBlink(now);
   scheduleNextGaze(now);
+  nextMicroAt_ = now + random(kMicroMinGapMs, kMicroMaxGapMs);  // E4C
 
-  const EmotionStyle s = styleFor(Emotion::Neutral);
+  const EmotionStyle s = styleFor(Emotion::Neutral, 0);
   sEyeOpen_ = s.eyeOpen;
   sMouthCurve_ = s.mouthCurve;
   sMustache_ = s.mustache;
   sBlinkMul_ = s.blinkMul;
   gazeMode_ = s.gaze;
 
-  const EyebrowStyle eb = eyebrowFor(Emotion::Neutral);
+  const EyebrowStyle eb = eyebrowFor(Emotion::Neutral, 0);
   sBrowLift_ = eb.lift;
   sBrowTilt_ = eb.tilt;
   sBrowAsym_ = eb.asym;
@@ -201,6 +245,12 @@ void Face::blinkNow() {
 }
 
 void Face::setEmotion(Emotion e) {
+  if (e != emotion_) {
+    // Expression Pack v1: beim Betreten Variante wuerfeln + kurzer Onset-
+    // Akzent -> gleiche Emotion sieht nicht immer identisch aus.
+    variant_ = static_cast<std::uint8_t>(random(variantCount(e)));
+    onsetUntil_ = millis() + kOnsetMs;
+  }
   emotion_ = e;  // Ziel-Emotion; der Stil wird in update() sanft nachgezogen.
 }
 
@@ -218,8 +268,46 @@ void Face::lookAt(std::int16_t x, std::int16_t y) {
 }
 
 void Face::update(std::uint32_t nowMs) {
+  // --- Zielstil bestimmen (Emotion + Expression-Variante, E4C) ---
+  EmotionStyle tgt = styleFor(emotion_, variant_);
+  EyebrowStyle eb = eyebrowFor(emotion_, variant_);
+
+  // Onset-Akzent (E4C): direkt nach einem Emotionswechsel schwingen die
+  // Brauen kurz ueber -> der Wechsel "blitzt auf" (Surprised-Moment).
+  if (nowMs < onsetUntil_) {
+    eb.lift *= kOnsetBoost;
+    eb.tilt *= kOnsetBoost;
+    eb.asym *= kOnsetBoost;
+  }
+
+  // Idle-Micro-Expression (E4C): in Neutral selten eine kleine Regung -
+  // kurz aufmerken, skeptischer Blick oder ein Mini-Laecheln. Nur Offsets
+  // auf die Zielwerte; die Lerp-Mechanik glaettet Ein- und Ausstieg.
+  if (emotion_ == Emotion::Neutral) {
+    if (microUntil_ == 0 && nowMs >= nextMicroAt_) {
+      microKind_ = static_cast<std::uint8_t>(random(3));
+      microUntil_ = nowMs + kMicroMs;
+      nextMicroAt_ = nowMs + random(kMicroMinGapMs, kMicroMaxGapMs);
+    }
+    if (microUntil_ != 0) {
+      if (nowMs >= microUntil_) {
+        microUntil_ = 0;
+      } else if (microKind_ == 0) {  // kurz aufmerken
+        eb.lift += 4.0f;
+      } else if (microKind_ == 1) {  // skeptischer Blick
+        tgt.eyeOpen *= 0.72f;
+        eb.asym += 3.0f;
+        eb.tilt += 1.5f;
+      } else {  // Mini-Laecheln
+        tgt.mouthCurve += 0.30f;
+        eb.lift += 1.5f;
+      }
+    }
+  } else {
+    microUntil_ = 0;
+  }
+
   // --- Emotions-Stil weich nachziehen (sanfte Uebergaenge) ---
-  const EmotionStyle tgt = styleFor(emotion_);
   sEyeOpen_    += (tgt.eyeOpen    - sEyeOpen_)    * kStyleLerp;
   sMouthCurve_ += (tgt.mouthCurve - sMouthCurve_) * kStyleLerp;
   sMustache_   += (tgt.mustache   - sMustache_)   * kStyleLerp;
@@ -227,7 +315,6 @@ void Face::update(std::uint32_t nowMs) {
   gazeMode_ = tgt.gaze;
 
   // --- Augenbrauen weich nachziehen (gleiche Mechanik -> kein Flackern) ---
-  const EyebrowStyle eb = eyebrowFor(emotion_);
   sBrowLift_ += (eb.lift - sBrowLift_) * kStyleLerp;
   sBrowTilt_ += (eb.tilt - sBrowTilt_) * kStyleLerp;
   sBrowAsym_ += (eb.asym - sBrowAsym_) * kStyleLerp;

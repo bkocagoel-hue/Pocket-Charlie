@@ -64,6 +64,14 @@ class Face {
 
   // Emotion + weich interpolierter Stil
   Emotion emotion_ = Emotion::Neutral;
+  // Expression Pack v1 (Sprint 4 E4C): Variante wird beim Betreten einer
+  // Emotion gewaehlt; Onset = kurzer Brauen-Akzent beim Wechsel; Micro =
+  // seltene kleine Idle-Regung in Neutral. Alles rein visuell, keine States.
+  std::uint8_t variant_ = 0;
+  std::uint32_t onsetUntil_ = 0;
+  std::uint32_t nextMicroAt_ = 0;
+  std::uint32_t microUntil_ = 0;
+  std::uint8_t microKind_ = 0;
   float sEyeOpen_ = 1.0f;
   float sMouthCurve_ = 0.0f;
   float sMustache_ = 0.0f;
