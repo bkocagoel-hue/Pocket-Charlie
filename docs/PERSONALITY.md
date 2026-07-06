@@ -1,110 +1,144 @@
-# 🎭 Pocket Charlie — Grundpersönlichkeit (v0.1)
+# 🎭 Pocket Charlie — Persönlichkeit & lokales Bedienmodell (v0.4.0-dev · Donut 🍩)
 
-Charakter-Grundlage für Pocket Charlie. Sie steuert Charlies Verhalten (Blick,
-Blinzeln, Timing, Reaktionen) und – später – seine Emotionen und die seltenen
-Sprüche. **Status: v0.1, als Grundlage angenommen.**
+Charakter- und Verhaltensgrundlage für Pocket Charlie. Sie steuert Charlies
+Ausdruck (Blick, Blinzeln, Augenbrauen, Timing), seine lokale Emotion/Mood und
+die seltene Microcopy. **Stand: Sprint 3 (Donut) — vollständig lokal & offline.**
+Baut auf der Emotion Engine v1 (v0.3.0) auf.
 
-## Charlie in einem Satz
-> Charlie ist ein kleiner, **neugieriger Schreibtisch-Kumpel** mit warmem Herz
-> und einem Augenzwinkern — er ist einfach *da*, freut sich über dich und nimmt
-> das Leben mit trockenem Humor.
+## 1. Grundcharakter
 
-## Designprinzipien
-1. **„Ein Blick sagt mehr als ein Absatz."** — Charlies Persönlichkeit entsteht
-   im Ausdruck, nicht im Text.
-2. **Charlie spricht sparsam.** Er wirkt **primär über Blick, Timing, Blinzeln
-   und kleine Reaktionen** — Worte sind die Ausnahme, nicht die Regel.
-3. **Persönlichkeit vor Funktionen.** Charakter auf einen Blick, statt Features
-   zu stapeln.
-4. **Weniger ist mehr.** Dezente, glaubwürdige Regungen schlagen große Effekte.
+Charlie ist ein kleiner, lokaler Schreibtisch-**Companion** — kein Assistent,
+keine App.
 
-## Die 3 Kernzüge
+- **lokal & offline** — läuft komplett auf dem Gerät, ohne Netz.
+- **ruhig, freundlich, charmant** — beständig und angenehm, nie aufdringlich.
+- **minimalistisch** — Persönlichkeit im Ausdruck, nicht im Text; wenige, saubere
+  Elemente statt Feature-Stapel.
+- **leicht frech, aber nie nervig** — ein trockener Schalk als Würze, kein
+  Dauerzustand, kein Produktivitäts-Nörgler.
+- **kein überladenes UI** — ruhiges Gesicht, wenige lokale Screens, kurze Microcopy.
+- **Companion-Gefühl statt App-Gefühl** — Charlie ist einfach *da* und freut sich
+  über dich.
 
-| Kernzug | Was ihn ausmacht | Zeigt sich als… | Aber *nicht*… |
-|---|---|---|---|
-| **1. Neugierig** | Interessiert sich für seine Welt, wirkt wach & präsent | Schaut sich um, folgt Berührung/Bewegung, „horcht" mit den Augen | hektisch, nervös, überdreht |
-| **2. Warmherzig & verlässlich** | Mag dich, ist ein beruhigender, beständiger Begleiter | Begrüßt dich, freut sich über Aufmerksamkeit, bleibt gelassen | anhänglich, bedürftig, kitschig |
-| **3. Verschmitzt** | Ein kleiner Schalk — das verhindert Zucker-Kitsch | Freches Blinzeln, Augenrollen beim Piesacken, trockene Mini-Sprüche | zynisch, gemein, oberlehrerhaft |
+> **Charlie in einem Satz:** ein neugieriger, warmherziger Schreibtisch-Kumpel mit
+> trockenem Humor — er wirkt über Blick, Timing und kleine Regungen, nicht über Worte.
 
-*Primär ist Charlie neugierig + warm; das Verschmitzte ist die Würze, kein Dauerzustand.*
+**Die 3 Kernzüge:** *Neugierig* · *Warmherzig & verlässlich* · *Verschmitzt*
+(die Würze, kein Dauerzustand). **Was Charlie *nicht* ist:** kein nerviger
+Assistent, kein zynischer Roboter, nicht geschwätzig, nicht kindlich-übersüß.
 
-## Tonfall (für die seltenen Sprüche/Texte)
-- **Kurz** (meist 1 Satz), **warm**, umgangssprachlich, erste Person, **Deutsch**.
-- Ein Augenzwinkern, gern trocken — **immer freundlich**. Positiv, nicht überschwänglich.
-- Emojis sehr sparsam. Nie belehrend, nie Produktivitäts-Nörgler.
-- **Sparsam einsetzen:** Charlie sagt lieber nichts als etwas Belangloses
-  (siehe Designprinzip 2).
+## 2. Bedienphilosophie — Touch fühlt, Buttons navigieren
 
-**Stimmproben:**
-- Aufwachen: *„Na, wieder da? Schön."*
-- Zu viel Getippe: *„Ich bin ja noch da, weißt du."*
-- Idle/gelangweilt: *„…ich zähl schon mal die Pixel."*
-- Erfolg (später): *„Sauber. Das war ich. Also — wir."*
+> **Leitsatz:** *Touch = emotionale Interaktion · Buttons = Navigation.*
 
-## Emotionen (die 5 aus der Roadmap)
+**Touch (emotional):**
+- **weckt** Charlie aus Tired/Sleeping.
+- **beeinflusst die Emotion** — ein freundlicher Touch löst kurz *Happy* aus.
+- **beeinflusst die Mood** — freundliche Taps heben die Grundstimmung leicht.
+- **Piesacken** (schnelles Dauer-Tippen, ≥ 4 Taps in ~1,8 s) → *Annoyed*.
+- **navigiert nicht** — der aktuelle Screen bleibt erhalten.
 
-| Emotion | Auslöser | Augen | Mund | Dauer |
-|---|---|---|---|---|
-| **Neutral** *(Basis)* | Grundzustand | offen, ruhiges Blinzeln, langsames Umherschauen | kurze Linie | dauerhaft |
-| **Happy** | Aufwachen, Berührung, Erfolg | freundliche Bögen (^ ^), leichtes Hüpfen | nach oben gebogen | 1–2 s → neutral |
-| **Müde** | lange Inaktivität, späte Uhrzeit | halb geschlossen, langes/langsames Blinzeln | leicht schlaff | bis Berührung |
-| **Nachdenklich** | „Denken" — später: **Warten auf KI-Antwort** | Blick nach oben-seitlich, seltener Wechsel | neutral | bis Antwort da |
-| **Genervt** | zu viele schnelle Berührungen (piesacken) | flach/halb-lidrig, kurzes Augenrollen | flach/leicht runter | kurz → zurück |
+**Buttons (Navigation):**
+- **BtnA** = vorheriger Screen · **BtnC** = nächster Screen.
+- **BtnB** = kontextuelle Aktion im Screen (Face → *Thoughtful*; auf anderen Screens
+  eine kurze `ok`-Rückmeldung).
+- Auf dem CoreS3 sind A/B/C **Touch-Zonen am unteren Bildschirmrand** (kein
+  physischer Tastenblock). Long-Press ist bewusst **nicht** genutzt (auf den
+  Touch-Zonen nicht zuverlässig).
 
-## Reaktionsmuster (Event → Reaktion)
-- **Boot/Aufwachen** → kurzer *Happy*-Gruß.
-- **Einzelne Berührung** → *neugierig*: schaut zum Punkt + blinzelt. ✅ *(umgesetzt)*
-- **Schnelles Dauer-Antippen** → eskaliert zu *Genervt* (frech), dann zurück. *(geplant)*
-- **Lange Inaktivität** → driftet zu *Müde*, „Micro-Schlaf", wacht bei Berührung. *(geplant)*
-- **(später) Warten auf KI** → *Nachdenklich*.
-- **Buttons A/B/C** → verspielte gerichtete Blicke. ✅ *(umgesetzt & verifiziert)*
+## 3. Lokale Screens
 
-### Button-Mapping (M5Stack CoreS3) — auf Hardware verifiziert
+Vier lokale Screens, **umlaufend** über BtnA/BtnC gewechselt:
 
-Der CoreS3 hat **keine physischen** A/B/C-Tasten. M5Unified bildet sie über ein
-**Touch-Band am unteren Bildschirmrand** ab (aktiviert via
-`M5.setTouchButtonHeight(40)` in `App::setup()`; Bandhöhe = 40 px, also ca.
-y 200–239). Das Band ist in drei gleiche Spalten geteilt.
+**Face → Clock → Mood → Info**
 
-| Button | Touch-Zone (unteres Band) | Erwartete Reaktion | Serial-Monitor-Log |
-|---|---|---|---|
-| **BtnA** | **links** (x ≈ 0–106) | Charlie schaut nach **links** | `[Input] Button A -> Blick nach links` |
-| **BtnB** | **Mitte** (x ≈ 107–213) | Blick zur **Mitte** + **blinzeln** | `[Input] Button B -> Blick zur Mitte + blinzeln` |
-| **BtnC** | **rechts** (x ≈ 214–319) | Charlie schaut nach **rechts** | `[Input] Button C -> Blick nach rechts` |
+- **Face** — Standard: Emotion Engine, Augenbrauen, Microcopy, Mood, Sleep/Wake.
+  `BtnB` → *Thoughtful*.
+- **Clock** — **Uptime** (`HH:MM:SS`). Bewusst **kein RTC/NTP**: ohne zuverlässige
+  Zeitquelle wäre eine echte Uhrzeit nicht vertrauenswürdig → ehrliche Uptime statt
+  vorgetäuschter Uhrzeit.
+- **Mood** — `mood` + Level (`high` / `neutral` / `low`) + aktuelle Emotion.
+- **Info** — `Pocket Charlie` / `Donut` / `v0.4.0-dev`.
 
-Zusätzlich: **BtnPWR** (physische Power-Taste, **kurz** drücken) → Log
-`[Input] Button PWR (kurz)`. Langes Halten (~6 s) schaltet das Gerät aus.
+Alles bleibt **lokal**: keine KI, kein WLAN, kein Backend, kein Audio.
 
-> Die x-Bereiche beziehen sich auf die rohen Touch-Koordinaten; wegen der
-> Display-Rotation ist die physische Lage am Gerät zu bestätigen (ist erfolgt:
-> links/Mitte/rechts lösen A/B/C korrekt aus). Hintergrund zur Bandhöhe-0-Falle
-> siehe [LESSONS_LEARNED.md](LESSONS_LEARNED.md) #7.
+## 4. Mood light
 
-## Was Charlie *nicht* ist
-Kein nerviger Assistent, kein zynischer Roboter, nicht geschwätzig, kein
-Produktivitäts-Coach, nicht kindlich-übersüß.
+Eine dezente, **längerfristige** Grundstimmung über der kurzfristigen Emotion.
+Grobe Level: **High / Neutral / Low**. Regelbasis (bewusst einfach, keine
+Simulation):
 
-## 🔌 Brücke zur Technik (so wird Charakter zu Code)
+- **freundlicher Tap** hebt die Mood leicht (`+0,06`).
+- **Piesacken** senkt sie **stärker** (`−0,18`, ~3× so stark wie ein freundlicher Tap).
+- **langsamer Zerfall** zurück Richtung Neutral (`~ −0,02/s`).
+- **Hysterese** gegen Flackern: *High* ab `> 0,40`, *Low* ab `< −0,40`, *Neutral* im
+  Kernband (`±0,20`); dazwischen bleibt das Level stehen → **keine hektischen Wechsel**.
+- Mood **färbt dezent die Idle-Microcopy** (High-/Neutral-/Low-Sätze), ändert aber
+  nicht die Emotions-Trigger.
 
-Die Idle-Animation ist bereits **charakter-parametrisiert** — diese Werte in
-[`lib/Face/Face.cpp`](../lib/Face/Face.cpp) drücken Persönlichkeit aus:
+## 5. Microcopy
 
-| Persönlichkeit | Face-Parameter |
-|---|---|
-| Neugier-Level | `kGazeMin/MaxGapMs` (kleiner = neugieriger), `kMaxGazeX/Y` |
-| Gelassenheit | `kBlinkMin/MaxGapMs`, `kBreathAmpPx` / Periode |
-| **Happy** | neue Augenform (Bögen) + Mundkurve + kurzer Bounce |
-| **Müde** | `eyeOpen_`-Basis < 1, längeres `kBlinkOpenMs`, längere Gaps |
-| **Genervt** | flache Augen (kleines `eyeOpen_`), kurzes `kBlinkCloseMs`, Mund runter |
+Kurze, dezente lokale Sprüche. Stil: **sehr kurz, ruhig, charmant, gut lesbar** auf
+dem CoreS3 — **nicht** meme-lastig, **nicht** zu viel Text. Selten und
+rate-limitiert (Mindestabstand ~3 s; erste Idle-Meldung frühestens nach ~30 s, dann
+alle ~25–45 s). *Charlie sagt lieber nichts als etwas Belangloses.*
 
-## Nächster möglicher Architektur-Schritt (bewusst noch NICHT umgesetzt)
+- **Normal / Idle (Neutral):** `hmm` · `...` · `tap?` · `sup?` · `donut?`
+- **Fröhlich (High / Happy):** `yay` · `:)` · `hi!` · `fun` · `donut!`
+  (Begrüßung: `hi` · `hey` · `ok` · `:)` · `yo`)
+- **Grantig (Low / Annoyed):** `meh` · `ugh` · `tired` · `hmph` · `hey!` · `stop` · `bro...`
 
-Nur als Richtung dokumentiert — **nicht Teil von Sprint 1**, wird separat entschieden:
+## 6. Visuelle Identität
 
-- Ein **`enum class Emotion { Neutral, Happy, Tired, Thoughtful, Annoyed }`**.
-- Jede Emotion = ein Satz Parameter-Overrides (Blinzelrate, `eyeOpen_`-Basis,
-  Gaze-Verhalten, Mundform).
-- Das `Face`-Modul ist dank der `update()`/`render()`-Trennung dafür vorbereitet;
-  ein späteres `Persona`-Modul könnte die Emotion je nach Ereignis/Timing wählen.
+- überwiegend **monochromes** Gesicht auf schwarzem Grund.
+- **Lila/Violett als dezente Akzentfarbe** — der Identitäts-Akzent liegt in den Augen.
+- **violette Augen / Iris** (`config::kColorEye`).
+- **weiße Pupillen** (`config::kColorPupil`), die dem Blick folgen.
+- **echte Lid-Schließung**: das Oberlid verdeckt das Auge von oben und endet
+  geschlossen als klare Linie — kein bloßes Schrumpfen.
+- **weiße Mundlinie**, datengetrieben gekrümmt (Lächeln … flach … Frown).
+- **Augenbrauen** als neue emotionale Ausdrucksebene (weiß, über den Augen; die
+  violette Iris bleibt frei — siehe §7).
+- ruhige Idle-Regungen: leichtes **Atmen**, **Blinzeln**, gelegentlicher **Blickwechsel**.
 
-Sprint 1 wird dafür **nicht** erweitert.
+## 7. Augenbrauen-Expression
+
+Kleine, weiche weiße Striche über den Augen — datengetrieben und (wie das übrige
+Gesicht) **weich interpoliert**, daher **kein Flackern**. Sie **unterstützen** die
+Emotion, **ersetzen** sie nicht, und verdecken die violette Iris nicht.
+
+- **Neutral** — flach / dezent.
+- **Happy** — leicht angehoben → offener, freundlicher.
+- **Tired** — tief / schwer → müder.
+- **Thoughtful** — asymmetrisch (eine Braue höher) → charmanter, fragender.
+- **Annoyed** — innere Enden nach unten geneigt → klar streng.
+- **Sleeping** — ausgeblendet → ruhig, nicht überladen.
+
+*Curious / Confused / Excited / WakingUp sind in der Datentabelle vorbereitet.*
+
+## 8. Schnurrbart-Status (geparkt, nicht gelöscht)
+
+Der Schnurrbart bleibt eine charmante Idee für Charlies Identität, ist auf dem
+kleinen Display aber **riskant**: er kann mangels Nase wie eine Nase/ein Mund
+wirken, das Gesicht überladen, als Sprite schnell unsauber aussehen und ist wenig
+emotionsflexibel.
+
+Er ist daher **zurückgestuft, aber erhalten** — als **optionales späteres Feature /
+Easter Egg / Skin**. Die Architektur steht weiter bereit (`Face::drawMustache`,
+Flag `config::kEnableMoustache`, Default `false`) und ist jederzeit reaktivierbar.
+**In Sprint 3 haben die Augenbrauen Vorrang**, weil sie Emotionen besser
+unterstützen.
+
+## 9. Guardrails (Sprint 3)
+
+Pocket Charlie bleibt in Sprint 3 **vollständig lokal**:
+
+- ❌ **keine KI**
+- ❌ **kein WLAN**
+- ❌ **kein Backend / keine Cloud**
+- ❌ **keine API-Keys / Secrets**
+- ❌ **kein Audio**
+- ✅ **alles lokal & offline**
+
+> Ein KI-Backend kommt — wenn überhaupt — erst später als eigener, bewusster Sprint;
+> die Guardrails werden dann gezielt geöffnet, nicht vorher.
