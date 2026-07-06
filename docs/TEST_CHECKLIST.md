@@ -6,6 +6,21 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 
 ---
 
+## Sprint 2 – Lokale Persönlichkeit (v0.3.0 – Cheesecake 🍰)
+
+**Verifiziert am:** 2026-07-06 · **Gerät:** M5Stack CoreS3
+
+### ✅ Ergebnis: Sprint 2 auf Hardware bestätigt
+- **Tired** nach ~20 s Inaktivität (schwere Lider, Pupillen sichtbar).
+- **Sleeping** nach ~40 s — Augen geschlossen, **kein normales Blinzeln**, animiertes **`zZz`**.
+- **Touch/Button weckt** Charlie sauber auf (Symbol weg, Augen auf).
+- **Annoyed** (schnelles Tippen) klar erkennbar, **weiße Pupillen bleiben sichtbar**.
+- **Thoughtful** (BtnB) mit **`?`** funktioniert.
+- **Boot/Touch → Happy** funktioniert weiter.
+- Violette Augen + weiße Pupillen; kein Flackern, kein Freeze, kein Reboot.
+
+---
+
 ## Sprint 1 – Charlie lebt visuell (v0.2.0 – Brownie 🍫)
 
 **Verifiziert am:** 2026-07-04 · **Gerät:** M5Stack CoreS3 (Upload-Port COM5) · **Release:** v0.2.0 – Brownie 🍫

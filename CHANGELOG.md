@@ -9,7 +9,35 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
-_Noch keine Änderungen. Als Nächstes: Sprint 2 – Lokale Persönlichkeit._
+_Noch keine Änderungen. Als Nächstes: Sprint 3 – Charlie denkt (KI-Backend)._
+
+---
+
+## [0.3.0] – 2026-07-06 – Cheesecake 🍰 · Sprint 2: Lokale Persönlichkeit
+
+### Added
+- **Emotion Engine v1** – `Persona`-Modul wählt lokal (ohne Netz/KI) die Emotion:
+  Neutral, Happy, Tired, Sleeping, Thoughtful, Annoyed (weitere im Enum
+  vorbereitet). Datengetriebenes, weich interpoliertes Face-Rendering.
+- **Lokale Trigger:** Boot/Touch → Happy, schnelles Dauer-Tippen → Annoyed,
+  Inaktivität → Tired → Sleeping, BtnB → Thoughtful; sauberes Aufwachen bei Input.
+- **Zustands-Indikatoren:** animiertes `zZz` im Schlaf, `?` bei Thoughtful.
+- Emotionswechsel-Log auf Serial (nur bei tatsächlichem Wechsel).
+
+### Changed
+- **Visuelle Identität:** violette Augen mit **weißen Pupillen**; echtes
+  Lid-Schließen (geschlossene Augen als klare Linie); Annoyed mit sichtbaren
+  Pupillen. Firmware-Version auf `0.3.0`.
+- Schnurrbart **vorerst deaktiviert** (`kEnableMoustache = false`); Zeichen-
+  funktion/Architektur bleiben für ein späteres Pixel-Sprite erhalten.
+
+### Verified
+- Auf echter Hardware (M5Stack CoreS3): Tired (~20 s), Sleeping (~40 s, kein
+  Blinzeln, `zZz`), Annoyed, Thoughtful, sauberes Aufwachen — bestätigt. Kein
+  Flackern/Freeze/Reboot. Details: [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md).
+
+### Out of Scope (bewusst)
+- Kein WLAN, keine KI, kein Audio, kein Menüsystem.
 
 ---
 
@@ -75,6 +103,7 @@ Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
 ---
 
-[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/releases/tag/v0.1.0

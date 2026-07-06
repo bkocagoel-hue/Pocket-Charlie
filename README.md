@@ -10,9 +10,10 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 
 **Status:**
 - ✅ **Sprint 0 – Hardware-Basis** · **v0.1.0 – Apple Pie 🥧** („Hello Pocket Charlie").
-- ✅ **Sprint 1 – Charlie lebt visuell** · **v0.2.0 – Brownie 🍫** (animiertes
-  Gesicht, Idle-Animation, Touch/Buttons — auf Hardware verifiziert).
-- ➡️ Als Nächstes: **Sprint 2 – Lokale Persönlichkeit**.
+- ✅ **Sprint 1 – Charlie lebt visuell** · **v0.2.0 – Brownie 🍫** (Gesicht, Idle, Touch/Buttons).
+- ✅ **Sprint 2 – Lokale Persönlichkeit** · **v0.3.0 – Cheesecake 🍰** (Emotion Engine v1:
+  Neutral/Happy/Tired/Sleeping/Thoughtful/Annoyed — auf Hardware verifiziert).
+- ➡️ Als Nächstes: **Sprint 3 – Charlie denkt** (KI-Backend).
 
 > **MVP-Regel:** Kein Feature wird umgesetzt, bevor Display, Touch, WLAN und
 > eine einfache Charlie-Gesichtsanzeige stabil funktionieren.
