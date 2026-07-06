@@ -35,6 +35,9 @@ void App::setup() {
   face_.begin(M5.Display.width(), M5.Display.height());
   persona_.begin();
   menu_.begin();
+  network_.begin();  // Sprint 4: non-blocking; verbindet (falls Secrets) im
+                     // Hintergrund waehrend des Boot-Splash. Ohne WLAN laeuft
+                     // Charlie unveraendert lokal (local-first).
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -53,6 +56,9 @@ void App::loop() {
   handleInput();     // Reaktionen ausloesen
 
   const std::uint32_t now = millis();
+
+  // Sprint 4: WLAN-Status fortschreiben (non-blocking, nur Polling).
+  network_.update(now);
 
   // Sprint 3: Eingaben zu Intents klassifizieren (read-only) und loggen.
   // Aendert (noch) kein Verhalten - Persona/Face bleiben zustaendig.
@@ -84,6 +90,9 @@ void App::loop() {
     if (menu_.current() == Screen::Face) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
     } else {
+      if (menu_.current() == Screen::Online) {
+        network_.retry();  // Online-Aktion: manueller Verbindungs-Refresh
+      }
       flashActive_ = true;  // andere Screens: kurze "ok"-Rueckmeldung
       screenFlashUntil_ = now + 1000;
       screenRedraw_ = true;
@@ -150,6 +159,14 @@ void App::renderScreen(std::uint32_t nowMs) {
       screenRedraw_ = true;
     }
   }
+  // Online-Screen aktualisiert sich bei Netz-Statuswechsel.
+  if (s == Screen::Online) {
+    const int ns = static_cast<int>(network_.state());
+    if (ns != lastNetState_) {
+      lastNetState_ = ns;
+      screenRedraw_ = true;
+    }
+  }
   // Flash-Ende -> einmal neu zeichnen (Rueckmeldung entfernen).
   if (flashActive_ && nowMs >= screenFlashUntil_) {
     flashActive_ = false;
@@ -164,10 +181,11 @@ void App::renderScreen(std::uint32_t nowMs) {
 
   // Je Screen genau ein Text-Widget (Face wird nicht hier gezeichnet).
   switch (s) {
-    case Screen::Clock: renderClockWidget(nowMs); break;
-    case Screen::Mood:  renderMoodWidget();       break;
-    case Screen::Info:  renderInfoWidget();       break;
-    default:            break;
+    case Screen::Clock:  renderClockWidget(nowMs); break;
+    case Screen::Mood:   renderMoodWidget();       break;
+    case Screen::Online: renderOnlineWidget();     break;
+    case Screen::Info:   renderInfoWidget();       break;
+    default:             break;
   }
 }
 
@@ -184,6 +202,20 @@ void App::renderClockWidget(std::uint32_t nowMs) {
 void App::renderMoodWidget() {
   display_.showScreen("mood", persona_.moodName(),
                       flashActive_ ? "ok" : persona_.stateName());
+}
+
+void App::renderOnlineWidget() {
+  // WiFi-Status (E2); Bridge/Thought folgen in E3/E4. Offline ist ein normaler
+  // Zustand: kurze, ruhige Anzeige statt Fehlermeldungs-Wand. BtnB = retry.
+  const char* sub = "";
+  switch (network_.state()) {
+    case NetState::Online:   sub = network_.ip(); break;
+    case NetState::Offline:  sub = "B: retry";    break;
+    case NetState::Disabled: sub = "no secrets";  break;
+    default:                 break;  // Connecting: keine Sub-Zeile
+  }
+  display_.showScreen("wifi", network_.stateName(),
+                      flashActive_ ? "ok" : sub);
 }
 
 void App::renderInfoWidget() {

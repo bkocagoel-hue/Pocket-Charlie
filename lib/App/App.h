@@ -18,6 +18,7 @@
 #include "Input.h"
 #include "InputContext.h"
 #include "Menu.h"
+#include "NetworkManager.h"
 #include "Persona.h"
 
 namespace pc {
@@ -35,6 +36,7 @@ class App {
   // Einzelne Text-Widgets (je genau ein Widget pro Screen).
   void renderClockWidget(std::uint32_t nowMs);
   void renderMoodWidget();
+  void renderOnlineWidget();
   void renderInfoWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
@@ -42,6 +44,7 @@ class App {
   InputContext interaction_;  // Sprint 3: Eingaben -> Intents (read-only)
   Face    face_;     // Charlies animiertes Gesicht
   Persona persona_;  // Stimmungs-/Emotionszustand (Sprint 2)
+  NetworkManager network_;  // Sprint 4: optionales WLAN (local-first)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;
@@ -59,6 +62,9 @@ class App {
   bool flashActive_ = false;
   std::uint32_t screenFlashUntil_ = 0;
   char uptimeBuf_[12] = {0};
+
+  // Sprint 4: Online-Screen zeichnet neu, wenn sich der Netz-Status aendert.
+  int lastNetState_ = -1;
 
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
   //   WifiService wifi_;   // Netzwerk (Sprint 0/3)

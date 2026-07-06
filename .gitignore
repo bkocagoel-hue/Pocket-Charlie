@@ -9,6 +9,10 @@
 .vscode/launch.json
 .vscode/ipch/
 
+# ---- Secrets (Sprint 4: echte Zugangsdaten NIEMALS committen) ----
+# Vorlage ist lib/PcConfig/PcSecrets.example.h (die bleibt im Repo).
+lib/PcConfig/PcSecrets.h
+
 # ---- OS ----
 .DS_Store
 Thumbs.db

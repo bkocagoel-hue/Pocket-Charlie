@@ -11,7 +11,7 @@
 
 namespace pc {
 
-enum class Screen : std::uint8_t { Face = 0, Clock, Mood, Info };
+enum class Screen : std::uint8_t { Face = 0, Clock, Mood, Online, Info };
 
 class Menu {
  public:
@@ -26,16 +26,17 @@ class Menu {
 
   const char* name() const {
     switch (cur_) {
-      case Screen::Face:  return "Face";
-      case Screen::Clock: return "Clock";
-      case Screen::Mood:  return "Mood";
-      case Screen::Info:  return "Info";
-      default:            return "?";
+      case Screen::Face:   return "Face";
+      case Screen::Clock:  return "Clock";
+      case Screen::Mood:   return "Mood";
+      case Screen::Online: return "Online";
+      case Screen::Info:   return "Info";
+      default:             return "?";
     }
   }
 
  private:
-  static constexpr int kCount = 4;
+  static constexpr int kCount = 5;
   Screen cur_ = Screen::Face;
 };
 
