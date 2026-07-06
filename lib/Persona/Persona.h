@@ -29,6 +29,9 @@ class Persona {
 
   Emotion current() const { return current_; }
 
+  // Mood light (Sprint 3): grobe Grundstimmung -1 (low) / 0 / +1 (high).
+  int moodLevel() const { return moodLevel_; }
+
  private:
   void setTransient(Emotion e, std::uint32_t nowMs, std::uint32_t durMs);
 
@@ -41,6 +44,11 @@ class Persona {
   // Rapid-Tap-Erkennung (-> Annoyed)
   std::uint16_t tapCount_ = 0;
   std::uint32_t tapWindowStart_ = 0;
+
+  // Mood light: laengerfristige, dezente Grundstimmung
+  float mood_ = 0.0f;                // [-1..+1]
+  int   moodLevel_ = 0;              // abgeleitet, mit Hysterese
+  std::uint32_t lastMoodTickMs_ = 0;
 };
 
 }  // namespace pc

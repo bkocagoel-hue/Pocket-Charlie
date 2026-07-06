@@ -4,8 +4,13 @@
 #include <M5Unified.h>
 
 #include "PcConfig.h"
+#include "Phrases.h"
 
 namespace pc {
+namespace {
+constexpr std::uint32_t kSayMs    = 1600;  // Anzeigedauer einer Textblase
+constexpr std::uint32_t kSayGapMs = 3000;  // Mindestabstand zwischen Spruechen
+}  // namespace
 
 void App::setup() {
   // 1) M5Unified initialisieren (Display, Power/AXP2101, Touch, Buttons, I2C).
@@ -25,8 +30,10 @@ void App::setup() {
   display_.showBootScreen();
 
   input_.begin();
+  interaction_.begin();
   face_.begin(M5.Display.width(), M5.Display.height());
   persona_.begin();
+  nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
   //    (Blockierendes delay ist hier bewusst ok: einmalig, in setup().)
@@ -44,7 +51,46 @@ void App::loop() {
   handleInput();     // Reaktionen ausloesen
 
   const std::uint32_t now = millis();
+
+  // Sprint 3: Eingaben zu Intents klassifizieren (read-only) und loggen.
+  // Aendert (noch) kein Verhalten - Persona/Face bleiben zustaendig.
+  interaction_.update(now, input_);
+  if (interaction_.rapidTap()) {
+    Serial.println("[Intent] RapidTap");
+  } else if (interaction_.doubleTap()) {
+    Serial.println("[Intent] DoubleTap");
+  } else if (interaction_.singleTap()) {
+    Serial.println("[Intent] SingleTap");
+  }
+  if (interaction_.btnA()) Serial.println("[Intent] BtnA");
+  if (interaction_.btnB()) Serial.println("[Intent] BtnB");
+  if (interaction_.btnC()) Serial.println("[Intent] BtnC");
+  if (interaction_.pwr())  Serial.println("[Intent] PWR");
+
   persona_.update(now, input_);  // jede Runde: Eingabe-Flanken nicht verpassen
+
+  // Sprint 3: dezente Microcopy je nach Zustand (rate-limitiert).
+  const Emotion emo = persona_.current();
+  const bool sayAllowed = (now - lastSayMs_ >= kSayGapMs);
+  if (emo != prevEmotion_) {
+    if (sayAllowed && emo == Emotion::Happy) {
+      face_.say(phrases::kGreet[random(phrases::kGreetN)], kSayMs);
+      lastSayMs_ = now;
+    } else if (sayAllowed && emo == Emotion::Annoyed) {
+      face_.say(phrases::kGrumble[random(phrases::kGrumbleN)], kSayMs);
+      lastSayMs_ = now;
+    }
+    prevEmotion_ = emo;
+  } else if (emo == Emotion::Neutral && now >= nextIdlePhraseAt_ && sayAllowed) {
+    const int mood = persona_.moodLevel();  // Mood light faerbt die Idle-Sprueche
+    const char* phrase =
+        (mood > 0) ? phrases::kIdleHigh[random(phrases::kIdleHighN)]
+      : (mood < 0) ? phrases::kIdleLow[random(phrases::kIdleLowN)]
+                   : phrases::kIdle[random(phrases::kIdleN)];
+    face_.say(phrase, kSayMs);
+    lastSayMs_ = now;
+    nextIdlePhraseAt_ = now + random(25000, 45000);
+  }
 
   if (now - lastFrameMs_ >= config::kFrameIntervalMs) {
     lastFrameMs_ = now;

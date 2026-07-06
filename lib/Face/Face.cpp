@@ -161,6 +161,11 @@ void Face::setEmotion(Emotion e) {
   emotion_ = e;  // Ziel-Emotion; der Stil wird in update() sanft nachgezogen.
 }
 
+void Face::say(const char* text, std::uint32_t durMs) {
+  sayText_ = text;
+  sayUntil_ = millis() + durMs;
+}
+
 void Face::lookAt(std::int16_t x, std::int16_t y) {
   const float cx = screenW_ * 0.5f;
   const float cy = screenH_ * 0.5f;
@@ -343,6 +348,18 @@ void Face::render() {
     canvas_.setTextDatum(top_left);
     canvas_.setTextSize(3);
     canvas_.drawString("?", screenW_ - 44, 26);
+  }
+
+  // Microcopy / Gedankenblase (Sprint 3): kurze Textblase unten, auto-hide.
+  if (sayText_ != nullptr) {
+    if (millis() < sayUntil_) {
+      canvas_.setTextColor(config::kColorFace);
+      canvas_.setTextDatum(bottom_center);
+      canvas_.setTextSize(2);
+      canvas_.drawString(sayText_, cx, static_cast<std::int16_t>(screenH_ - 6));
+    } else {
+      sayText_ = nullptr;
+    }
   }
 
   // TODO (Sprint 2): seltene Idle-Easter-Eggs hier einklinken (nur Platzhalter).

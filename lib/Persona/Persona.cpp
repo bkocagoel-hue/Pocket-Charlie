@@ -37,6 +37,9 @@ void Persona::begin() {
   lastActivityMs_ = 0;
   tapCount_ = 0;
   tapWindowStart_ = 0;
+  mood_ = 0.0f;
+  moodLevel_ = 0;
+  lastMoodTickMs_ = 0;
 }
 
 void Persona::setTransient(Emotion e, std::uint32_t nowMs, std::uint32_t durMs) {
@@ -97,6 +100,27 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
       } else if (current_ == Emotion::Tired || current_ == Emotion::Sleeping) {
         current_ = Emotion::Neutral;  // aufgewacht
       }
+    }
+
+    // --- Mood light: dezente, laengerfristige Grundstimmung ---
+    if (touched && !rapid) mood_ += 0.06f;  // freundliche Interaktion hebt
+    if (rapid)             mood_ -= 0.18f;  // Piesacken senkt
+    if (nowMs - lastMoodTickMs_ >= 1000) {  // langsamer Zerfall Richtung 0
+      lastMoodTickMs_ = nowMs;
+      if (mood_ > 0.02f)       mood_ -= 0.02f;
+      else if (mood_ < -0.02f) mood_ += 0.02f;
+      else                     mood_ = 0.0f;
+    }
+    if (mood_ > 1.0f) mood_ = 1.0f;
+    if (mood_ < -1.0f) mood_ = -1.0f;
+    int lvl = moodLevel_;  // Hysterese gegen Flackern
+    if (mood_ > 0.40f) lvl = 1;
+    else if (mood_ < -0.40f) lvl = -1;
+    else if (mood_ > -0.20f && mood_ < 0.20f) lvl = 0;
+    if (lvl != moodLevel_) {
+      moodLevel_ = lvl;
+      Serial.printf("[Persona] mood: %s\n",
+                    lvl > 0 ? "High" : (lvl < 0 ? "Low" : "Neutral"));
     }
   }
 

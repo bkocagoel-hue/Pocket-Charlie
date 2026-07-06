@@ -29,6 +29,9 @@ class Face {
   // --- Emotion (Sprint 2) ---
   void setEmotion(Emotion e);  // Ziel-Emotion; Stil wird sanft nachgezogen
 
+  // --- Microcopy / Gedankenblase (Sprint 3) ---
+  void say(const char* text, std::uint32_t durMs);  // kurze Textblase anzeigen
+
  private:
   void scheduleNextBlink(std::uint32_t nowMs);
   void scheduleNextGaze(std::uint32_t nowMs);
@@ -63,6 +66,10 @@ class Face {
   float sMustache_ = 0.0f;
   float sBlinkMul_ = 1.0f;
   std::uint8_t gazeMode_ = 0;
+
+  // Microcopy / Gedankenblase (Sprint 3)
+  const char* sayText_ = nullptr;
+  std::uint32_t sayUntil_ = 0;
 };
 
 }  // namespace pc
