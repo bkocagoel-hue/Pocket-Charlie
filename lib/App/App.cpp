@@ -38,6 +38,8 @@ void App::setup() {
   network_.begin();  // Sprint 4: non-blocking; verbindet (falls Secrets) im
                      // Hintergrund waehrend des Boot-Splash. Ohne WLAN laeuft
                      // Charlie unveraendert lokal (local-first).
+  online_.begin();   // Sprint 4 E3: Bridge-Ping-Task (Core 0); ohne Bridge-URL
+                     // deaktiviert. Pings nur manuell via BtnB.
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -59,6 +61,9 @@ void App::loop() {
 
   // Sprint 4: WLAN-Status fortschreiben (non-blocking, nur Polling).
   network_.update(now);
+  if (network_.justDisconnected()) {
+    online_.reset();  // altes Bridge-Ergebnis ist ohne WLAN nicht mehr ehrlich
+  }
 
   // Sprint 3: Eingaben zu Intents klassifizieren (read-only) und loggen.
   // Aendert (noch) kein Verhalten - Persona/Face bleiben zustaendig.
@@ -89,11 +94,14 @@ void App::loop() {
   if (interaction_.btnB()) {
     if (menu_.current() == Screen::Face) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
+    } else if (menu_.current() == Screen::Online && network_.online()) {
+      online_.requestPing();  // Bridge-Ping; "checking" ist die Rueckmeldung
+      screenRedraw_ = true;
     } else {
       if (menu_.current() == Screen::Online) {
-        network_.retry();  // Online-Aktion: manueller Verbindungs-Refresh
+        network_.retry();  // WLAN offline: BtnB = Verbindungs-Retry
       }
-      flashActive_ = true;  // andere Screens: kurze "ok"-Rueckmeldung
+      flashActive_ = true;  // kurze "ok"-Rueckmeldung
       screenFlashUntil_ = now + 1000;
       screenRedraw_ = true;
     }
@@ -159,9 +167,11 @@ void App::renderScreen(std::uint32_t nowMs) {
       screenRedraw_ = true;
     }
   }
-  // Online-Screen aktualisiert sich bei Netz-Statuswechsel.
+  // Online-Screen aktualisiert sich bei WiFi- oder Bridge-Statuswechsel
+  // (beide Zustaende kombiniert in einem Vergleichswert).
   if (s == Screen::Online) {
-    const int ns = static_cast<int>(network_.state());
+    const int ns = static_cast<int>(network_.state()) * 16 +
+                   static_cast<int>(online_.state());
     if (ns != lastNetState_) {
       lastNetState_ = ns;
       screenRedraw_ = true;
@@ -205,16 +215,28 @@ void App::renderMoodWidget() {
 }
 
 void App::renderOnlineWidget() {
-  // WiFi-Status (E2); Bridge/Thought folgen in E3/E4. Offline ist ein normaler
-  // Zustand: kurze, ruhige Anzeige statt Fehlermeldungs-Wand. BtnB = retry.
-  const char* sub = "";
-  switch (network_.state()) {
-    case NetState::Online:   sub = network_.ip(); break;
-    case NetState::Offline:  sub = "B: retry";    break;
-    case NetState::Disabled: sub = "no secrets";  break;
-    default:                 break;  // Connecting: keine Sub-Zeile
+  // Offline ist ein normaler Zustand: kurze, ruhige Anzeige statt
+  // Fehlermeldungs-Wand. Ohne WLAN -> WiFi-Sicht (E2, BtnB = retry);
+  // mit WLAN -> Bridge-Sicht (E3, BtnB = ping).
+  if (!network_.online()) {
+    const char* sub = "";
+    switch (network_.state()) {
+      case NetState::Offline:  sub = "B: retry";   break;
+      case NetState::Disabled: sub = "no secrets"; break;
+      default:                 break;  // Connecting: keine Sub-Zeile
+    }
+    display_.showScreen("wifi", network_.stateName(),
+                        flashActive_ ? "ok" : sub);
+    return;
   }
-  display_.showScreen("wifi", network_.stateName(),
+
+  const char* sub = "";
+  switch (online_.state()) {
+    case BridgeState::Idle: sub = "B: ping"; break;
+    case BridgeState::Down: sub = "B: ping"; break;
+    default:                break;  // checking/ok/no url: keine Sub-Zeile
+  }
+  display_.showScreen("bridge", online_.stateName(),
                       flashActive_ ? "ok" : sub);
 }
 

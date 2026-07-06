@@ -19,6 +19,7 @@
 #include "InputContext.h"
 #include "Menu.h"
 #include "NetworkManager.h"
+#include "OnlineClient.h"
 #include "Persona.h"
 
 namespace pc {
@@ -45,6 +46,7 @@ class App {
   Face    face_;     // Charlies animiertes Gesicht
   Persona persona_;  // Stimmungs-/Emotionszustand (Sprint 2)
   NetworkManager network_;  // Sprint 4: optionales WLAN (local-first)
+  OnlineClient   online_;   // Sprint 4: Bridge-Ping (Task auf Core 0)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;
@@ -63,7 +65,8 @@ class App {
   std::uint32_t screenFlashUntil_ = 0;
   char uptimeBuf_[12] = {0};
 
-  // Sprint 4: Online-Screen zeichnet neu, wenn sich der Netz-Status aendert.
+  // Sprint 4: Online-Screen zeichnet neu, wenn sich WiFi- ODER Bridge-Status
+  // aendert (beide kombiniert in einem Wert, siehe renderScreen()).
   int lastNetState_ = -1;
 
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
