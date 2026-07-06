@@ -32,6 +32,10 @@ class App {
   void handleInput();
   // Zeichnet die Text-Screens (Clock/Mood/Info) - nur bei Aenderung.
   void renderScreen(std::uint32_t nowMs);
+  // Einzelne Text-Widgets (je genau ein Widget pro Screen).
+  void renderClockWidget(std::uint32_t nowMs);
+  void renderMoodWidget();
+  void renderInfoWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons

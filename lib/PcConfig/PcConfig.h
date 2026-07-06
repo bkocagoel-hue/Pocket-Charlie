@@ -25,8 +25,9 @@ namespace pc {
 namespace config {
 
 // --- Projekt-Metadaten ---------------------------------------------------
-constexpr const char* kAppName    = "Pocket Charlie";
-constexpr const char* kAppVersion = "0.4.0-dev";  // Sprint 3 in Arbeit (Donut)
+constexpr const char* kAppName     = "Pocket Charlie";
+constexpr const char* kAppVersion  = "0.4.0-dev";  // Sprint 3 in Arbeit (Donut)
+constexpr const char* kAppCodename = "Donut";       // Release-Arbeitstitel (Sprint 3)
 
 // --- Boot-Screen (Sprint 1) ----------------------------------------------
 constexpr const char*    kBootHint     = "Charlie wacht auf ...";

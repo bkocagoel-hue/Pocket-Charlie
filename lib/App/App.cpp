@@ -162,27 +162,33 @@ void App::renderScreen(std::uint32_t nowMs) {
   screenRedraw_ = false;
   lastRenderedScreen_ = static_cast<int>(s);
 
+  // Je Screen genau ein Text-Widget (Face wird nicht hier gezeichnet).
   switch (s) {
-    case Screen::Clock: {
-      const std::uint32_t t = nowMs / 1000;
-      snprintf(uptimeBuf_, sizeof(uptimeBuf_), "%02u:%02u:%02u",
-               static_cast<unsigned>(t / 3600),
-               static_cast<unsigned>((t / 60) % 60),
-               static_cast<unsigned>(t % 60));
-      display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
-      break;
-    }
-    case Screen::Mood:
-      display_.showScreen("mood", persona_.moodName(),
-                          flashActive_ ? "ok" : persona_.stateName());
-      break;
-    case Screen::Info:
-      display_.showScreen("Pocket Charlie", "Donut",
-                          flashActive_ ? "ok" : config::kAppVersion);
-      break;
-    default:
-      break;  // Face wird nicht hier gezeichnet
+    case Screen::Clock: renderClockWidget(nowMs); break;
+    case Screen::Mood:  renderMoodWidget();       break;
+    case Screen::Info:  renderInfoWidget();       break;
+    default:            break;
   }
+}
+
+void App::renderClockWidget(std::uint32_t nowMs) {
+  // Uptime HH:MM:SS - bewusst KEINE echte Uhrzeit (kein RTC/NTP in Sprint 3).
+  const std::uint32_t t = nowMs / 1000;
+  snprintf(uptimeBuf_, sizeof(uptimeBuf_), "%02u:%02u:%02u",
+           static_cast<unsigned>(t / 3600),
+           static_cast<unsigned>((t / 60) % 60),
+           static_cast<unsigned>(t % 60));
+  display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
+}
+
+void App::renderMoodWidget() {
+  display_.showScreen("mood", persona_.moodName(),
+                      flashActive_ ? "ok" : persona_.stateName());
+}
+
+void App::renderInfoWidget() {
+  display_.showScreen(config::kAppName, config::kAppCodename,
+                      flashActive_ ? "ok" : config::kAppVersion);
 }
 
 }  // namespace pc
