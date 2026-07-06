@@ -1,6 +1,7 @@
 #pragma once
 // ============================================================================
-//  Face - Charlies animiertes Gesicht (Augen + Schnurrbart + Mund)
+//  Face - Charlies animiertes Gesicht (Augen + Augenbrauen + Mund;
+//  Schnurrbart optional/geparkt)
 //
 //  Sprint 2: emotionsabhaengiges, datengetriebenes Rendering. Eine Emotion
 //  liefert einen Parametersatz (EmotionStyle, in Face.cpp), der weich
@@ -39,6 +40,8 @@ class Face {
                std::int16_t gazeX, std::int16_t gazeY);
   void drawMouth(std::int16_t cx, std::int16_t baseY, float curve);
   void drawMustache(std::int16_t cx, std::int16_t baseY, float lift);
+  void drawEyebrows(std::int16_t cx, std::int16_t eyeY, float lift, float tilt,
+                    float asym, float vis);
 
   M5Canvas canvas_;
   std::int16_t screenW_ = 0;
@@ -66,6 +69,12 @@ class Face {
   float sMustache_ = 0.0f;
   float sBlinkMul_ = 1.0f;
   std::uint8_t gazeMode_ = 0;
+
+  // Augenbrauen (Sprint 3, Einheit 6): weich interpolierte Ausdrucksebene
+  float sBrowLift_ = 0.0f;  // + angehoben / - gesenkt
+  float sBrowTilt_ = 0.0f;  // + innere Enden tiefer (streng) / - hoeher (weich)
+  float sBrowAsym_ = 0.0f;  // eine Braue hoeher (nachdenklich/verwirrt)
+  float sBrowVis_ = 1.0f;   // Sichtbarkeit 0..1 (Sleeping -> 0, ruhiges Ausblenden)
 
   // Microcopy / Gedankenblase (Sprint 3)
   const char* sayText_ = nullptr;

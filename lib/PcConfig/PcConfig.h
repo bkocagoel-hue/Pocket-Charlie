@@ -54,6 +54,15 @@ constexpr std::uint16_t kColorEye   = 0x8B77;  // warmes Violett: Augen/Iris
 constexpr std::uint16_t kColorPupil = 0xFFFF;  // Weiss: Pupille
 constexpr std::uint16_t kColorGlint = 0xFFFF;  // Weiss: Glanzpunkt
 
+// --- Visuelle Identitaet: Schnurrbart (optionales Zukunfts-Feature) ------
+// Der Schnurrbart bleibt eine charmante Idee, ist aber auf dem kleinen Display
+// riskant (wirkt mangels Nase wie eine Nase/ein Mund). In Sprint 3 hat statt-
+// dessen die Augenbrauen-Expression Vorrang (siehe Face::drawEyebrows).
+// Der Schnurrbart bleibt als optionales spaeteres Feature / Easter Egg / Skin
+// erhalten: Architektur (Face::drawMustache) steht, hier zentral per Flag
+// reaktivierbar. Default AUS. Hintergrund: docs/SPRINT_3_PLAN.md (Einheit 6).
+constexpr bool kEnableMoustache = false;
+
 // --- Game-Loop / Animation -----------------------------------------------
 // Ziel-Bildrate der nicht-blockierenden Hauptschleife.
 constexpr std::uint32_t kFrameIntervalMs = 33;  // ~30 FPS

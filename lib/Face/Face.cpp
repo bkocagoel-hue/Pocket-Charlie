@@ -27,11 +27,11 @@ constexpr float        kEyeOpenPupil    = 0.40f;  // ab dieser Oeffnung: Pupille
 constexpr float        kEyeClosedThresh = 0.12f;  // darunter: explizite geschlossene Linie
 constexpr std::int16_t kEyeClosedLineH  = 6;      // Hoehe der geschlossenen Lid-Linie
 
-// Schnurrbart: aktuell DEAKTIVIERT (auf kleinem Display noch nicht ueberzeugend).
-// Architektur/Hilfsfunktion bleiben erhalten -> spaeter als echtes Pixel-Sprite.
-// Zum Reaktivieren: kEnableMoustache = true.
-constexpr bool kEnableMoustache = false;
-// Schnurrbart-Geometrie (genutzt, wenn kEnableMoustache = true):
+// Schnurrbart: aktuell DEAKTIVIERT, Flag zentral in PcConfig.h
+// (config::kEnableMoustache). In Sprint 3 hat die Augenbrauen-Expression
+// Vorrang; der Schnurrbart bleibt als optionales spaeteres Feature / Easter Egg
+// / Skin erhalten. Architektur/Hilfsfunktion bleiben stehen (reaktivierbar).
+// Schnurrbart-Geometrie (genutzt, wenn config::kEnableMoustache = true):
 constexpr std::int16_t kStacheY     = 152;  // vertikale Mitte
 constexpr std::int16_t kStacheGap   = 4;    // halbe Mittel-Luecke (zwei Haelften)
 constexpr std::int16_t kStacheHalfW = 30;   // Armlaenge je Haelfte
@@ -46,6 +46,13 @@ constexpr std::int16_t kMouthHalfW = 32;
 constexpr float        kMouthAmp   = 11.0f;
 constexpr std::int16_t kMouthCols  = 22;
 constexpr std::int16_t kMouthThick = 5;
+
+// Augenbrauen (Sprint 3, Einheit 6): kleine emotionale Ausdrucksebene.
+// Minimalistisch, weiss (wie der Mund), sitzen ueber der Augen-Oberkante und
+// verdecken die violette Iris NICHT. Alle Werte in Pixeln.
+constexpr std::int16_t kBrowHalfW = 24;  // halbe Braunbreite je Auge
+constexpr std::int16_t kBrowThick = 5;   // Strichdicke (duenn, kein Balken)
+constexpr std::int16_t kBrowGap   = 15;  // Abstand ueber der Augen-Oberkante
 
 // --- Blick (Gaze) ---
 constexpr std::int16_t kMaxGazeX   = 16;
@@ -100,6 +107,36 @@ EmotionStyle styleFor(Emotion e) {
   }
 }
 
+// Augenbrauen-Stil je Emotion - datengetrieben und (wie EmotionStyle) weich
+// interpoliert, damit nichts flackert. Bedeutung der Felder:
+//   lift  : + hebt die Brauen an / - senkt sie (schwer)
+//   tilt  : + = innere Enden tiefer (streng/genervt), - = innere hoeher (weich)
+//   asym  : eine Braue hoeher (nachdenklich/verwirrt); 0 = symmetrisch
+//   hidden: Sleeping -> keine Brauen (ruhig, nicht ueberladen)
+struct EyebrowStyle {
+  float lift;
+  float tilt;
+  float asym;
+  bool  hidden;
+};
+
+EyebrowStyle eyebrowFor(Emotion e) {
+  switch (e) {
+    case Emotion::Happy:      return { 3.0f, -1.5f, 0.0f, false};
+    case Emotion::Tired:      return {-3.0f,  1.0f, 0.0f, false};
+    case Emotion::Thoughtful: return { 1.0f,  0.0f, 4.0f, false};
+    case Emotion::Annoyed:    return {-1.0f,  6.0f, 0.0f, false};
+    case Emotion::Curious:    return { 4.0f, -1.0f, 1.5f, false};
+    case Emotion::Sad:        return { 0.0f, -4.0f, 0.0f, false};
+    case Emotion::Sleeping:   return {-2.0f,  0.0f, 0.0f, true };
+    case Emotion::WakingUp:   return {-1.0f,  0.0f, 0.0f, false};
+    case Emotion::Excited:    return { 4.0f, -1.0f, 0.0f, false};
+    case Emotion::Confused:   return { 1.0f,  1.0f, 4.0f, false};
+    case Emotion::Neutral:
+    default:                  return { 0.0f,  0.0f, 0.0f, false};
+  }
+}
+
 inline float clampf(float v, float lo, float hi) {
   return v < lo ? lo : (v > hi ? hi : v);
 }
@@ -131,6 +168,12 @@ void Face::begin(std::int16_t screenW, std::int16_t screenH) {
   sMustache_ = s.mustache;
   sBlinkMul_ = s.blinkMul;
   gazeMode_ = s.gaze;
+
+  const EyebrowStyle eb = eyebrowFor(Emotion::Neutral);
+  sBrowLift_ = eb.lift;
+  sBrowTilt_ = eb.tilt;
+  sBrowAsym_ = eb.asym;
+  sBrowVis_ = eb.hidden ? 0.0f : 1.0f;
 }
 
 void Face::scheduleNextBlink(std::uint32_t nowMs) {
@@ -182,6 +225,14 @@ void Face::update(std::uint32_t nowMs) {
   sMustache_   += (tgt.mustache   - sMustache_)   * kStyleLerp;
   sBlinkMul_   += (tgt.blinkMul   - sBlinkMul_)   * kStyleLerp;
   gazeMode_ = tgt.gaze;
+
+  // --- Augenbrauen weich nachziehen (gleiche Mechanik -> kein Flackern) ---
+  const EyebrowStyle eb = eyebrowFor(emotion_);
+  sBrowLift_ += (eb.lift - sBrowLift_) * kStyleLerp;
+  sBrowTilt_ += (eb.tilt - sBrowTilt_) * kStyleLerp;
+  sBrowAsym_ += (eb.asym - sBrowAsym_) * kStyleLerp;
+  const float browVisTgt = eb.hidden ? 0.0f : 1.0f;
+  sBrowVis_ += (browVisTgt - sBrowVis_) * kStyleLerp;
 
   // --- Blinzeln (im Schlaf ausgesetzt: Augen bleiben geschlossen) ---
   if (emotion_ == Emotion::Sleeping) {
@@ -309,6 +360,37 @@ void Face::drawMustache(std::int16_t cx, std::int16_t baseY, float lift) {
   }
 }
 
+void Face::drawEyebrows(std::int16_t cx, std::int16_t eyeY, float lift,
+                        float tilt, float asym, float vis) {
+  // Zwei kurze, weiche Striche ueber den Augen. vis skaliert Breite/Dicke, damit
+  // die Brauen beim Einschlafen ruhig "zusammengehen" statt hart zu verschwinden.
+  if (vis < 0.15f) return;
+  const float halfW = kBrowHalfW * vis;
+  if (halfW < 2.0f) return;
+  std::int16_t r = iround(kBrowThick * vis * 0.5f);
+  if (r < 1) r = 1;
+
+  const std::int16_t eyeTopY = static_cast<std::int16_t>(eyeY - kEyeH / 2);
+  const int kSteps = 14;
+  // dir=+1: linkes Auge (innere Enden liegen bei +X); dir=-1: rechtes Auge.
+  for (int dir = 1; dir >= -1; dir -= 2) {
+    const float ex = static_cast<float>(cx - dir * (kEyeGap / 2));
+    // Asymmetrie hebt das linke Auge staerker an (nachdenklich/verwirrt).
+    const float eLift = lift + (dir > 0 ? asym : -asym * 0.4f);
+    const float baseY = eyeTopY - kBrowGap - eLift;
+    const float innerX = ex + dir * halfW;   // inneres Ende (zur Mitte)
+    const float outerX = ex - dir * halfW;   // aeusseres Ende
+    const float innerY = baseY + tilt;
+    const float outerY = baseY - tilt;
+    for (int i = 0; i <= kSteps; ++i) {
+      const float t = static_cast<float>(i) / kSteps;
+      const std::int16_t x = iround(outerX + (innerX - outerX) * t);
+      const std::int16_t y = iround(outerY + (innerY - outerY) * t);
+      canvas_.fillCircle(x, y, r, config::kColorFace);
+    }
+  }
+}
+
 void Face::render() {
   if (!ready_) return;
 
@@ -324,7 +406,10 @@ void Face::render() {
   drawEye(cx - kEyeGap / 2, eyeY, eye, gx, gy);
   drawEye(cx + kEyeGap / 2, eyeY, eye, gx, gy);
 
-  if (kEnableMoustache) {
+  // Augenbrauen ueber den Augen (verdecken die violette Iris nicht).
+  drawEyebrows(cx, eyeY, sBrowLift_, sBrowTilt_, sBrowAsym_, sBrowVis_);
+
+  if (config::kEnableMoustache) {
     drawMustache(cx, static_cast<std::int16_t>(kStacheY + bob), sMustache_);
   }
   drawMouth(cx, static_cast<std::int16_t>(kMouthY + bob), sMouthCurve_);

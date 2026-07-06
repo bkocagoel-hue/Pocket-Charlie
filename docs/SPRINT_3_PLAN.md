@@ -103,3 +103,41 @@ Gedankenblase · Statusmeldung · kein Flackern/Freeze/Reboot.
 `Display::showScreen()` (Text-Renderer, flicker-frei – nur bei Änderung neu
 gezeichnet), `Persona::pokeThoughtful()` (BtnB-Aktion → Menü von Persona
 entkoppelt). Text-Screens nutzen violette Akzente. `main.cpp` unverändert.
+
+---
+
+## Einheit 6 – Augenbrauen-Expression (umgesetzt, v0.4.0-dev)
+
+**Fokuswechsel:** Statt des Schnurrbarts bekommt Charlie eine kleine
+**Augenbrauen-Ausdrucksebene** – lesbarere Emotionen bei geringerem Risiko
+(kein Mund-/Nasen-Effekt, flexibler pro Emotion). Schnurrbart-Status siehe unten.
+
+**Ziel:** minimalistische Pixel-Augenbrauen, die Emotionen besser lesbar machen –
+schlicht, wenige Pixel, kein Flackern, monochrom (weiß wie der Mund), **ohne** die
+violette Iris zu überdecken; Emotionen unterstützen, nicht ersetzen.
+
+**Umsetzung (rein additiv, datengetrieben – gleiche Mechanik wie `EmotionStyle`):**
+- Neuer Stil-Datensatz `eyebrowFor(Emotion)` in `Face.cpp` mit vier Feldern:
+  `lift` (heben/senken), `tilt` (innere Enden tiefer = streng / höher = weich),
+  `asym` (eine Braue höher = nachdenklich/verwirrt), `hidden` (Sleeping → keine).
+- Weiche Interpolation über `kStyleLerp` (`sBrowLift/Tilt/Asym/Vis_`) → **kein
+  Flackern**, Übergänge passen zum restlichen Gesicht.
+- Gekapselte Render-Funktion `Face::drawEyebrows(cx, eyeY, lift, tilt, asym, vis)`:
+  zwei kurze weiche Striche über den Augen; `vis` skaliert Breite/Dicke, sodass
+  die Brauen beim Einschlafen ruhig „zusammengehen" statt hart zu verschwinden.
+
+**Varianten je Emotion:** Neutral flach/dezent · Happy leicht angehoben ·
+Tired tief/schwer · Thoughtful asymmetrisch (eine höher) · Annoyed innen deutlich
+geneigt (streng) · Sleeping keine · Curious/Confused/Excited/WakingUp vorbereitet.
+
+**Bewusst nicht angetastet:** Emotion Engine (`Persona`/`Emotion`), Augen-/Pupillen-/
+Blink-Logik, `main.cpp`. Geänderte Dateien: `lib/Face/Face.h`, `lib/Face/Face.cpp`,
+`lib/PcConfig/PcConfig.h`, `docs/SPRINT_3_PLAN.md`.
+
+### Schnurrbart-Status (zurückgestuft, nicht gelöscht)
+Der Schnurrbart bleibt eine charmante Idee, ist auf dem kleinen Display aber
+riskant (Mund-/Nasen-Effekt, überladenes Gesicht, unsaubere Sprites, wenig
+emotionsflexibel). Er bleibt daher als **optionales späteres Feature / Easter Egg
+/ Skin** erhalten: Architektur (`Face::drawMustache`, Flag
+`config::kEnableMoustache`, Default `false`) steht und ist reaktivierbar. In
+Sprint 3 hat die Augenbrauen-Expression Vorrang.
