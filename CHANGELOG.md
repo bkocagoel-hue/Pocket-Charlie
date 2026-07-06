@@ -7,9 +7,35 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [Unreleased]
+## [Unreleased] – v0.4.0-dev – Donut 🍩 · Sprint 3: Lokale Interaktion
 
-_Noch keine Änderungen. Als Nächstes: Sprint 3 – Charlie denkt (KI-Backend)._
+> Arbeitsstand (`-dev`), noch **kein** Release. Sprint 3 bleibt **vollständig lokal**:
+> kein WLAN, keine KI, kein Backend, kein Audio. (Ein KI-Backend wäre – wenn
+> überhaupt – ein späterer, eigener Sprint.)
+
+### Added
+- **`InputContext`** (`lib/Interaction/`) – klassifiziert den Eingabe-Snapshot zu
+  lokalen Intents (SingleTap/RapidTap, BtnA/B/C, PWR).
+- **Button-Menüführung + lokale Widgets** – Screens **Face · Clock/Uptime · Mood ·
+  Info** (umlaufend). `BtnA`/`BtnC` navigieren, `BtnB` = kontextuelle Aktion
+  (Face → Thoughtful; sonst kurze `ok`-Rückmeldung). Touch bleibt emotional.
+- **Mood light** – dezente, langfristige Grundstimmung (High/Neutral/Low) mit
+  Hysterese; färbt die Idle-Microcopy.
+- **Microcopy / Gedankenblasen** – sehr kurze, seltene lokale Sprüche.
+- **Augenbrauen-Expression** – kleine, weiche, emotionsabhängige Pixel-Augenbrauen
+  (weich interpoliert, kein Flackern), die Emotionen lesbarer machen.
+
+### Changed
+- Firmware-Version auf `0.4.0-dev`. Schnurrbart bleibt deaktiviert und ist auf ein
+  **optionales späteres Feature / Easter Egg / Skin** zurückgestuft
+  (`config::kEnableMoustache`, Default `false`; Architektur bleibt erhalten).
+
+### Docs
+- `PERSONALITY.md` auf Donut-Stand; `SPRINT_3_PLAN.md` (Einheiten 4–7 inkl. Local
+  Widgets v1); `TEST_CHECKLIST.md` um den Donut-Durchlauf ergänzt.
+
+### Out of Scope (bewusst)
+- Kein WLAN, keine KI, kein Backend/Cloud, kein Audio, keine API-Keys/Secrets.
 
 ---
 

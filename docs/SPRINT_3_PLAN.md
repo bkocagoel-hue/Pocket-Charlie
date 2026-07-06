@@ -141,3 +141,54 @@ emotionsflexibel). Er bleibt daher als **optionales späteres Feature / Easter E
 / Skin** erhalten: Architektur (`Face::drawMustache`, Flag
 `config::kEnableMoustache`, Default `false`) steht und ist reaktivierbar. In
 Sprint 3 hat die Augenbrauen-Expression Vorrang.
+
+---
+
+## Einheit 7 – Local Widgets v1 (Modell dokumentiert, v0.4.0-dev)
+
+**Ziel:** die vorhandene lokale Screen-Struktur als erste **lokale Widgets** sauber
+benennen und dokumentieren — **ohne** großes UI-Framework, kein Overengineering.
+
+**Denkmodell:**
+```
+Screen = aktuell sichtbare Ansicht (welche)
+Widget = kleiner lokaler Inhalt / Funktion innerhalb einer Ansicht (was)
+```
+In Sprint 3 liegen Screen und Widget bewusst **1:1** übereinander (ein Widget je
+Screen). Das reicht und bleibt schlicht.
+
+**Entscheidung: Option A (dokumentieren).** Die bestehende Struktur ist bereits
+sauber geschichtet und braucht **keine** Widget-Abstraktion:
+- `Menu` (`lib/Menu/Menu.h`) = reine Navigation (welcher Screen), entkoppelt von Emotion.
+- **Face-Widget** = eigenes Modul `Face` (Off-Screen-`M5Canvas`, flicker-frei).
+- **Text-Widgets** (Clock/Mood/Info) teilen **einen** generischen Renderer
+  `Display::showScreen(title, main, sub)`; die Daten liefert `App::renderScreen()`.
+
+Eine Basisklasse/Registry/Plugin-Struktur wäre bei 4 statischen Screens
+Overengineering → **nicht** umgesetzt.
+
+**Widget-Übersicht (Stand Donut):**
+| Widget | Ansicht | Inhalt | Quelle |
+|---|---|---|---|
+| **Face** | Face-Screen | Gesicht, Emotion, Augen/Pupillen, Blinzeln, Augenbrauen, Microcopy, `zZz`/`?`, Touch-Reaktion, Mood im Hintergrund | `lib/Face/` |
+| **Clock / Uptime** | Clock-Screen | **Uptime** `HH:MM:SS` (bewusst kein RTC/NTP → ehrliche Laufzeit) | `App::renderScreen` + `Display::showScreen` |
+| **Mood** | Mood-Screen | `mood` + Level (high/neutral/low) + aktuelle Emotion | `App::renderScreen` + `Persona` |
+| **Info** | Info-Screen | `Pocket Charlie` / `Donut` / `v0.4.0-dev` | `App::renderScreen` + `PcConfig` |
+
+**Bedienprinzip unverändert:** Buttons = Navigation (`BtnA` zurück, `BtnC` vor,
+`BtnB` Aktion/Thoughtful), Touch = emotionale Interaktion; umlaufend
+Face → Clock → Mood → Info → Face.
+
+**Guardrails:** alles lokal — keine KI, kein WLAN, kein Backend, kein Audio, keine
+Cloud. `main.cpp` unverändert.
+
+**TODO / offen (bewusst nicht umgesetzt):**
+- **Battery-Widget** — technisch machbar über `M5.Power.getBatteryLevel()` /
+  `M5.Power.isCharging()` (CoreS3 = AXP2101). Zurückgestellt: Prozentwert kann grob/
+  springend sein, bräuchte einen 5. Screen + neuen Hardware-Test. Nur einbauen, wenn
+  der Wert stabil und ehrlich ist — **kein** Fake-Akkustand.
+- **Clock vs. Uptime** — echte Uhrzeit erst, wenn eine zuverlässige Zeitquelle sauber
+  geklärt ist; bis dahin bleibt **Uptime** der ehrliche Standard.
+- Optionales Code-Polish (Option B): kleine benannte Render-Helfer in
+  `App::renderScreen()` + Codename `Donut` zentral in `PcConfig` — rein kosmetisch,
+  nur wenn gewünscht (dann mit Build + Hardware-Test).

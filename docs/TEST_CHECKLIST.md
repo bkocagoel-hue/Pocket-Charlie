@@ -6,6 +6,48 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 
 ---
 
+## Sprint 3 – Lokale Interaktion / Local Widgets (v0.4.0-dev – Donut 🍩)
+
+Lokale Widgets: **Face · Clock/Uptime · Mood · Info**. Buttons navigieren, Touch
+interagiert emotional. Einzelne Einheiten wurden bereits bestätigt (siehe unten);
+ein **voller Donut-Durchlauf** vor dem Release steht noch aus (⏳).
+
+**Bereits auf Hardware bestätigt (Einheiten 1–6):**
+- ✅ Version/Boot `v0.4.0-dev`, InputContext, Microcopy, Mood light, Button-Menüführung.
+- ✅ **Augenbrauen-Expression** (`dffb5cc`) — bestätigt in dieser Sitzung.
+
+### ⏳ Voller Donut-Durchlauf (vor Release auszuführen)
+
+**Navigation**
+- ⏳ Boot startet auf **Face**.
+- ⏳ `BtnC`: Face → Clock/Uptime → Mood → Info → Face (umlaufend).
+- ⏳ `BtnA` navigiert rückwärts.
+- ⏳ schnelles Drücken: kein Freeze, keine kaputten Zwischenzustände.
+
+**Face-Widget**
+- ⏳ Gesicht sichtbar; Emotionen + Augenbrauen funktionieren.
+- ⏳ Touch → Happy · schnelles Tippen → Annoyed · `BtnB` → Thoughtful/`?`.
+- ⏳ Sleeping → `zZz`; Aufwachen funktioniert; Microcopy erscheint.
+- ⏳ Mood light beeinflusst die Idle-Sprüche.
+
+**Clock/Uptime-Widget**
+- ⏳ Anzeige sichtbar, Uptime läuft plausibel, **keine** vorgetäuschte echte Uhrzeit.
+- ⏳ kein WLAN/NTP; Text gut lesbar; kein Flackern.
+
+**Mood-Widget**
+- ⏳ High/Neutral/Low nachvollziehbar; freundliche Taps heben, Piesacken senkt.
+- ⏳ Mood driftet zurück zu Neutral; keine hektischen Wechsel.
+
+**Info-Widget**
+- ⏳ `Pocket Charlie` / `Donut` / `v0.4.0-dev` sichtbar, gut lesbar, nicht abgeschnitten.
+
+**Stabilität**
+- ⏳ einige Minuten Laufzeit; Inaktivität → Sleep → Wake.
+- ⏳ kein Freeze/Reboot/Flackern; Pupillenlogik intakt; violette Akzente sauber.
+- ⏳ Serial-Logs nicht übermäßig spammy.
+
+---
+
 ## Sprint 2 – Lokale Persönlichkeit (v0.3.0 – Cheesecake 🍰)
 
 **Verifiziert am:** 2026-07-06 · **Gerät:** M5Stack CoreS3
