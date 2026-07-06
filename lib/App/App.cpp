@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
+#include <cstdio>
 
 #include "PcConfig.h"
 #include "Phrases.h"
@@ -33,6 +34,7 @@ void App::setup() {
   interaction_.begin();
   face_.begin(M5.Display.width(), M5.Display.height());
   persona_.begin();
+  menu_.begin();
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -67,6 +69,27 @@ void App::loop() {
   if (interaction_.btnC()) Serial.println("[Intent] BtnC");
   if (interaction_.pwr())  Serial.println("[Intent] PWR");
 
+  // Sprint 3: Button-Menuefuehrung. BtnA/BtnC navigieren, BtnB = Screen-Aktion.
+  if (interaction_.btnA()) {
+    menu_.prev();
+    screenRedraw_ = true;
+    Serial.printf("[Menu] screen: %s\n", menu_.name());
+  }
+  if (interaction_.btnC()) {
+    menu_.next();
+    screenRedraw_ = true;
+    Serial.printf("[Menu] screen: %s\n", menu_.name());
+  }
+  if (interaction_.btnB()) {
+    if (menu_.current() == Screen::Face) {
+      persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
+    } else {
+      flashActive_ = true;  // andere Screens: kurze "ok"-Rueckmeldung
+      screenFlashUntil_ = now + 1000;
+      screenRedraw_ = true;
+    }
+  }
+
   persona_.update(now, input_);  // jede Runde: Eingabe-Flanken nicht verpassen
 
   // Sprint 3: dezente Microcopy je nach Zustand (rate-limitiert).
@@ -94,43 +117,71 @@ void App::loop() {
 
   if (now - lastFrameMs_ >= config::kFrameIntervalMs) {
     lastFrameMs_ = now;
-    face_.setEmotion(persona_.current());
-    face_.update(now);
-    face_.render();
+    if (menu_.current() == Screen::Face) {
+      face_.setEmotion(persona_.current());
+      face_.update(now);
+      face_.render();
+      lastRenderedScreen_ = -1;  // Display zeigt jetzt das Gesicht
+    } else {
+      renderScreen(now);
+    }
   }
 
   delay(1);  // an FreeRTOS zurueckgeben (kein Busy-Wait, Watchdog zufrieden)
 }
 
 void App::handleInput() {
-  // --- Touch: Charlie schaut zum Beruehrungspunkt und blinzelt ---
+  // Touch bleibt emotionale Interaktion: Charlie schaut zum Punkt + blinzelt.
+  // (Buttons steuern die Menuefuehrung - siehe loop().)
   if (input_.wasPressed()) {
-    Serial.printf("[Input] Touch @ (%d, %d)\n", input_.touchX(),
-                  input_.touchY());
     face_.lookAt(input_.touchX(), input_.touchY());
     face_.blinkNow();
   }
-  if (input_.wasReleased()) {
-    Serial.println("[Input] Touch losgelassen");
-  }
+}
 
-  // --- Buttons (CoreS3: A/B/C = Touch-Zonen unten, PWR = Power-Taste) ---
-  // Drei unterschiedliche Reaktionen -> deckt "mind. 3 Touch-Aktionen" ab.
-  if (input_.btnAPressed()) {
-    Serial.println("[Input] Button A -> Blick nach links");
-    face_.lookAt(0, M5.Display.height() / 2);
+void App::renderScreen(std::uint32_t nowMs) {
+  const Screen s = menu_.current();
+
+  // Clock aktualisiert sich sekundenweise.
+  if (s == Screen::Clock) {
+    const std::uint32_t sec = nowMs / 1000;
+    if (sec != lastUptimeSec_) {
+      lastUptimeSec_ = sec;
+      screenRedraw_ = true;
+    }
   }
-  if (input_.btnBPressed()) {
-    Serial.println("[Input] Button B -> Blick zur Mitte + blinzeln");
-    face_.lookAt(M5.Display.width() / 2, M5.Display.height() / 2);
-    face_.blinkNow();
+  // Flash-Ende -> einmal neu zeichnen (Rueckmeldung entfernen).
+  if (flashActive_ && nowMs >= screenFlashUntil_) {
+    flashActive_ = false;
+    screenRedraw_ = true;
   }
-  if (input_.btnCPressed()) {
-    Serial.println("[Input] Button C -> Blick nach rechts");
-    face_.lookAt(M5.Display.width(), M5.Display.height() / 2);
-  }
-  if (input_.btnPwrPressed()) {
-    Serial.println("[Input] Button PWR (kurz)");
+  // Screen gewechselt (oder kam vom Face) -> neu zeichnen.
+  if (static_cast<int>(s) != lastRenderedScreen_) screenRedraw_ = true;
+
+  if (!screenRedraw_) return;
+  screenRedraw_ = false;
+  lastRenderedScreen_ = static_cast<int>(s);
+
+  switch (s) {
+    case Screen::Clock: {
+      const std::uint32_t t = nowMs / 1000;
+      snprintf(uptimeBuf_, sizeof(uptimeBuf_), "%02u:%02u:%02u",
+               static_cast<unsigned>(t / 3600),
+               static_cast<unsigned>((t / 60) % 60),
+               static_cast<unsigned>(t % 60));
+      display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
+      break;
+    }
+    case Screen::Mood:
+      display_.showScreen("mood", persona_.moodName(),
+                          flashActive_ ? "ok" : persona_.stateName());
+      break;
+    case Screen::Info:
+      display_.showScreen("Pocket Charlie", "Donut",
+                          flashActive_ ? "ok" : config::kAppVersion);
+      break;
+    default:
+      break;  // Face wird nicht hier gezeichnet
   }
 }
 

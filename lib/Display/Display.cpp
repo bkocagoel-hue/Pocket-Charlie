@@ -41,4 +41,33 @@ void Display::showBootScreen() {
                         M5.Display.height() - 6);
 }
 
+void Display::showScreen(const char* title, const char* mainText,
+                         const char* sub) {
+  clear();
+  const int32_t cx = M5.Display.width() / 2;
+  const int32_t cy = M5.Display.height() / 2;
+
+  // Titel klein oben, in Charlies violettem Akzent.
+  M5.Display.setTextDatum(top_center);
+  M5.Display.setTextColor(config::kColorEye, config::kColorBackground);
+  M5.Display.setTextSize(2);
+  M5.Display.drawString(title, cx, 30);
+
+  // dezente violette Akzentlinie
+  M5.Display.fillRect(cx - 42, 60, 84, 3, config::kColorEye);
+
+  // Hauptinfo gross, zentriert, weiss.
+  M5.Display.setTextDatum(middle_center);
+  M5.Display.setTextColor(config::kColorText, config::kColorBackground);
+  M5.Display.setTextSize(4);
+  M5.Display.drawString(mainText, cx, cy + 4);
+
+  // optionale Sub-Zeile darunter, klein.
+  if (sub != nullptr && sub[0] != '\0') {
+    M5.Display.setTextDatum(top_center);
+    M5.Display.setTextSize(2);
+    M5.Display.drawString(sub, cx, cy + 42);
+  }
+}
+
 }  // namespace pc

@@ -17,6 +17,7 @@
 #include "Face.h"
 #include "Input.h"
 #include "InputContext.h"
+#include "Menu.h"
 #include "Persona.h"
 
 namespace pc {
@@ -29,6 +30,8 @@ class App {
  private:
   // Wertet die Eingaben dieses Frames aus und loest Reaktionen aus.
   void handleInput();
+  // Zeichnet die Text-Screens (Clock/Mood/Info) - nur bei Aenderung.
+  void renderScreen(std::uint32_t nowMs);
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons
@@ -43,6 +46,15 @@ class App {
   Emotion       prevEmotion_ = Emotion::Neutral;
   std::uint32_t lastSayMs_ = 0;
   std::uint32_t nextIdlePhraseAt_ = 0;
+
+  // Sprint 3: Button-Menuefuehrung / Text-Screens
+  Menu menu_;
+  int  lastRenderedScreen_ = -1;    // zuletzt gezeichneter Text-Screen (-1 = Face)
+  bool screenRedraw_ = false;
+  std::uint32_t lastUptimeSec_ = 0;
+  bool flashActive_ = false;
+  std::uint32_t screenFlashUntil_ = 0;
+  char uptimeBuf_[12] = {0};
 
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
   //   WifiService wifi_;   // Netzwerk (Sprint 0/3)

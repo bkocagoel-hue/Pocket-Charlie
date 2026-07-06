@@ -77,3 +77,29 @@ Gedankenblase · Statusmeldung · kein Flackern/Freeze/Reboot.
 ## 9. Versionsziel
 - Entwicklung: `v0.4.0-dev`
 - Release bei DoD: `v0.4.0 – Donut 🍩` (separat, erst nach Hardware-Test)
+
+---
+
+## Einheit 4 – Button-Menüführung (umgesetzt, v0.4.0-dev)
+
+**Bedienphilosophie:** *Buttons navigieren, Touch interagiert emotional.*
+- `BtnA` = vorheriger Screen · `BtnC` = nächster Screen · `BtnB` = Aktion im Screen.
+- **Touch** bleibt Charlie-Interaktion (Happy/Mood/Wecken) und navigiert **nicht**;
+  der aktuelle Screen bleibt erhalten.
+- **Long-Press: nicht** umgesetzt (auf CoreS3-Touch-Zonen nicht zuverlässig) →
+  TODO; aktuell nur Short-Press.
+
+**Screens (Reihenfolge Face → Clock → Mood → Info, umlaufend):**
+- **Face** – Standard; Emotion Engine, Microcopy, Mood, Sleep/Wake wie bisher.
+  `BtnB` → Thoughtful.
+- **Clock** – **Uptime** (`uptime HH:MM:SS`). Bewusst **kein RTC/NTP**: ohne
+  zuverlässige Zeitquelle wäre echte Uhrzeit nicht vertrauenswürdig → ehrlich
+  Uptime statt vorgetäuschter Uhrzeit.
+- **Mood** – `mood` + Level (high/neutral/low) + aktuelle Emotion.
+- **Info** – `Pocket Charlie` / `Donut` / `v0.4.0-dev`.
+- `BtnB` auf Clock/Mood/Info → kurze `ok`-Rückmeldung.
+
+**Architektur:** neues `lib/Menu/` (reine Navigation, getrennt von Emotion),
+`Display::showScreen()` (Text-Renderer, flicker-frei – nur bei Änderung neu
+gezeichnet), `Persona::pokeThoughtful()` (BtnB-Aktion → Menü von Persona
+entkoppelt). Text-Screens nutzen violette Akzente. `main.cpp` unverändert.

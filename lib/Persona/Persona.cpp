@@ -40,6 +40,7 @@ void Persona::begin() {
   mood_ = 0.0f;
   moodLevel_ = 0;
   lastMoodTickMs_ = 0;
+  hasPending_ = false;
 }
 
 void Persona::setTransient(Emotion e, std::uint32_t nowMs, std::uint32_t durMs) {
@@ -74,11 +75,13 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
       }
     }
 
-    // Trigger nach Prioritaet: Annoyed > Thoughtful (BtnB) > Happy (Touch).
-    if (rapid) {
+    // Trigger nach Prioritaet: externe Aktion > Annoyed > Happy (Touch).
+    // (BtnB wird jetzt von der Menuefuehrung behandelt -> pokeThoughtful().)
+    if (hasPending_) {
+      setTransient(pending_, nowMs, pendingDur_);
+      hasPending_ = false;
+    } else if (rapid) {
       setTransient(Emotion::Annoyed, nowMs, kAnnoyedMs);
-    } else if (input.btnBPressed()) {
-      setTransient(Emotion::Thoughtful, nowMs, kThoughtfulMs);
     } else if (touched) {
       setTransient(Emotion::Happy, nowMs, kTouchHappyMs);
     }
@@ -129,6 +132,18 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
     Serial.printf("[Persona] -> %s\n", emotionName(current_));
     lastLogged_ = current_;
   }
+}
+
+void Persona::pokeThoughtful() {
+  pending_ = Emotion::Thoughtful;
+  pendingDur_ = kThoughtfulMs;
+  hasPending_ = true;
+}
+
+const char* Persona::stateName() const { return emotionName(current_); }
+
+const char* Persona::moodName() const {
+  return moodLevel_ > 0 ? "high" : (moodLevel_ < 0 ? "low" : "neutral");
 }
 
 }  // namespace pc

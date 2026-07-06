@@ -21,6 +21,9 @@ class Display {
   // Kurzer Start-Bildschirm mit Name + Version (Sprint-1-Bootscreen).
   void showBootScreen();
 
+  // Generischer Text-Screen (Sprint 3): Titel klein + Hauptinfo gross + Sub.
+  void showScreen(const char* title, const char* mainText, const char* sub);
+
  private:
   void clear();
 };
