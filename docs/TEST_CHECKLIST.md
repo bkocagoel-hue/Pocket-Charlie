@@ -6,6 +6,51 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
 
 ---
 
+## Sprint 4 – Online Widgets v1 + Emotion Expansion (v0.5.0-dev – Éclair ⚡)
+
+**Branch:** `sprint-4-eclair-online-widgets` · **Gerät:** M5Stack CoreS3
+**Prinzip:** local-first — ohne WLAN/Bridge läuft Charlie unverändert lokal.
+
+**Einzeln hardware-verifiziert am 2026-07-06:**
+- ✅ **E2 – WLAN-Grundlage:** verbindet non-blocking (`online` + IP), Fallbacks
+  `off/trying/offline`, BtnB-Retry, max. 3 Auto-Retries; ohne Secrets rein lokal.
+- ✅ **E3 – Bridge `/health`:** `ready → checking → ok`; Backend aus → `down`
+  ohne Freeze; UI bleibt bedienbar (HTTP im Task auf Core 0).
+- ✅ **E4A – Online Thought:** BtnB-Kaskade health→thought, `waiting...` → kurzer
+  Satz, `B: again`; Fehler → charmanter Fallback (`offline / still me`).
+- ✅ **E4B – Emotion Expansion v2:** WakingUp (Wake aus Sleep), Curious (BtnB auf
+  Clock/Mood/Info), Excited (WLAN verbindet), Confused (Online-Fehler), Sad (ab
+  2. Fehler in Folge, nur kurzer Moment — keine Dauerstimmung); Mood-Screen
+  zeigt neue Namen (kein `?`); Microcopy passend und selten.
+- ✅ **E4C – Expression Pack v1:** Happy-/Thoughtful-(skeptisch)/Annoyed-/
+  Tired-(bored)-Varianten sichtbar; Onset-Akzent ruhig; Neutral-Micro-
+  Expressions selten; Sleeping unverändert ruhig (keine Micro-Expressions im
+  Schlaf); Pupillen/Brauen/Lid-Schließung/Mund stabil.
+
+### ⏳ Voller Éclair-Gesamtdurchlauf (vor Release auszuführen)
+
+**Lokal**
+- ⏳ Face · Touch → Happy · Piesacken → Annoyed · BtnB auf Face → Thoughtful.
+- ⏳ Clock/Uptime · Mood · Online · Info; Navigation umlaufend (BtnA/BtnC).
+- ⏳ Sleep/Wake stabil; kein Freeze/Flackern/Reboot.
+
+**Online**
+- ⏳ WLAN ohne Secrets → `wifi off / no secrets`; alles Lokale funktioniert.
+- ⏳ WLAN mit Secrets → `online` + IP.
+- ⏳ Bridge aus → `down`/Fallback · Bridge an → `/health` ok.
+- ⏳ `/thought` liefert kurze lokale Sätze; Backend stoppen → kein Freeze;
+  Backend wieder starten → Verbindung funktioniert wieder.
+
+**Emotionen (alle 11)**
+- ⏳ Neutral · Happy · Tired · Sleeping · Thoughtful · Annoyed · Curious ·
+  Confused · Excited · Sad · WakingUp.
+
+**Expressions**
+- ⏳ Happy-Varianten · Thoughtful/Skeptical · Annoyed-Varianten · Tired/Bored.
+- ⏳ Onset-Akzent bei Wechseln · Neutral-Micro-Expressions · Sleeping bleibt ruhig.
+
+---
+
 ## Sprint 3 – Lokale Interaktion / Local Widgets (v0.4.0-dev – Donut 🍩)
 
 Lokale Widgets: **Face · Clock/Uptime · Mood · Info**. Buttons navigieren, Touch

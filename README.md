@@ -13,7 +13,13 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 - ✅ **Sprint 1 – Charlie lebt visuell** · **v0.2.0 – Brownie 🍫** (Gesicht, Idle, Touch/Buttons).
 - ✅ **Sprint 2 – Lokale Persönlichkeit** · **v0.3.0 – Cheesecake 🍰** (Emotion Engine v1:
   Neutral/Happy/Tired/Sleeping/Thoughtful/Annoyed — auf Hardware verifiziert).
-- ➡️ Als Nächstes: **Sprint 3 – Charlie denkt** (KI-Backend).
+- ✅ **Sprint 3 – Lokale Interaktion** · **v0.4.0-dev – Donut 🍩** (Button-Navigation,
+  lokale Widgets Face/Clock/Mood/Info, Mood light, Microcopy, Augenbrauen —
+  hardware-verifiziert; **Release ausstehend**).
+- 🔄 **Sprint 4 – Online Widgets v1** · **v0.5.0-dev – Éclair ⚡** (in Arbeit, Branch
+  `sprint-4-eclair-online-widgets`): optionales WLAN, lokale Bridge (`/health`,
+  `/thought`), Emotion Expansion v2, Expression Pack v1 — **local-first**, keine
+  API-Keys in der Firmware, noch keine echte KI.
 
 > **MVP-Regel:** Kein Feature wird umgesetzt, bevor Display, Touch, WLAN und
 > eine einfache Charlie-Gesichtsanzeige stabil funktionieren.
@@ -37,21 +43,22 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
 ```
 Pocket Charlie/
 ├── platformio.ini        # Build-Konfiguration (Board, Libs, Flags)
+├── backend/
+│   └── pocket-charlie-bridge/  # lokale Bridge (Python-Stdlib, 0 Deps): /health, /thought
 ├── lib/                  # Eigene, modulare Bibliotheken (je 1 Verantwortung)
-│   ├── PcConfig/         #   -> Projektweite Konstanten (header-only Modul)
-│   │   └── PcConfig.h
+│   ├── PcConfig/         #   -> Konstanten + PcSecrets.example.h (Secrets-Vorlage)
 │   ├── App/              #   -> Orchestrator: besitzt Subsysteme, steuert Loop
-│   │   ├── App.h / App.cpp
-│   ├── Display/          #   -> Screen-Grundfunktionen + Boot-Screen
-│   │   ├── Display.h / Display.cpp
+│   ├── Display/          #   -> Screen-Grundfunktionen + Text-Widgets
 │   ├── Input/            #   -> Touchscreen + Buttons (sauberer Snapshot)
-│   │   ├── Input.h / Input.cpp
+│   ├── Interaction/      #   -> InputContext: Eingaben -> Intents
+│   ├── Menu/             #   -> Navigation (Face/Clock/Mood/Online/Info)
+│   ├── Persona/          #   -> Emotionen, Mood light, Microcopy
+│   ├── Network/          #   -> optionales WLAN (non-blocking, local-first)
+│   ├── Online/           #   -> Bridge-Client (/health, /thought) im Task
 │   └── Face/             #   -> Charlies animiertes Gesicht (Canvas/PSRAM)
-│       ├── Face.h / Face.cpp
 ├── src/
 │   └── main.cpp          # Dünner Einstiegspunkt (setup/loop -> App)
-├── docs/
-│   └── LESSONS_LEARNED.md
+├── docs/                 # Sprint-Pläne, Personality, Test-Checkliste, Lessons
 ├── README.md
 └── CHANGELOG.md
 ```
@@ -76,11 +83,13 @@ Pocket Charlie/
 
 | Baustein        | Ort                | Status / Phase              |
 |-----------------|--------------------|-----------------------------|
-| Eingabe         | `lib/Input/`       | ✅ Sprint 1                  |
-| Gesicht/Animation | `lib/Face/`      | ✅ Sprint 1 (Idle)          |
-| Emotionen/State | `lib/Persona/`     | Phase 1–2 (geplant)         |
-| WLAN            | `lib/WifiService/` | Phase 0/3 (geplant)         |
-| KI-Backend      | `lib/AiService/`   | Phase 3 (geplant)           |
+| Eingabe         | `lib/Input/` + `lib/Interaction/` | ✅ Sprint 1/3 |
+| Gesicht/Animation | `lib/Face/`      | ✅ Sprint 1–4 (Emotionen, Augenbrauen, Expressions) |
+| Emotionen/State | `lib/Persona/`     | ✅ Sprint 2–4 (Engine v1 + Mood light + Expansion v2) |
+| Navigation/Widgets | `lib/Menu/`     | ✅ Sprint 3 |
+| WLAN            | `lib/Network/`     | ✅ Sprint 4 (optional, non-blocking) |
+| Backend-Anbindung | `lib/Online/` + `backend/` | ✅ Sprint 4 (lokale Bridge, mock — noch keine KI) |
+| KI-Backend      | via Bridge         | später (eigener Sprint; **keine Keys in Firmware**) |
 
 ---
 
@@ -110,6 +119,28 @@ pio device monitor
 
 ---
 
+## Dev-Setup: Online-Funktionen (Sprint 4, optional)
+
+Charlie ist **local-first** — ohne diese Schritte läuft er vollständig lokal
+(Online-Screen zeigt dann ehrlich `wifi off / no secrets`).
+
+1. **Secrets anlegen** (bleiben lokal, sind gitignored — niemals committen):
+   `lib/PcConfig/PcSecrets.example.h` → als `lib/PcConfig/PcSecrets.h` kopieren,
+   WLAN-Daten + Bridge-URL eintragen (Laptop-IP im Heimnetz, **nicht** `localhost`).
+2. **Lokale Bridge starten** (Python-Standardbibliothek, 0 Dependencies):
+
+```powershell
+py backend\pocket-charlie-bridge\server.py
+```
+
+3. Browser-Test: <http://localhost:8787/health> · Details + Firewall-Hinweis:
+   [backend/pocket-charlie-bridge/README.md](backend/pocket-charlie-bridge/README.md)
+
+> **Keine API-Keys in der Firmware.** Die Bridge ist lokal und statisch/mock —
+> `/thought` ist bewusst noch **nicht** KI-basiert.
+
+---
+
 ## Sprint 1 – Ziele & Stand
 
 1. **Touchscreen testen** — ✅ `Input`-Modul liest Touch, Koordinaten werden
@@ -130,10 +161,11 @@ dort ein Emotions-System skizziert. Sprint 1 wird dafür nicht erweitert.
 ## Roadmap (Kurzfassung)
 
 - **Phase 0 – Hardware-Basis** ✅
-- **Phase 1 – Charlie lebt visuell** ✅ (Gesicht, Idle, Bootscreen; Emotionen folgen)
-- Phase 2 – Charlie reagiert (lokale Interaktion, Menülogik)
-- Phase 3 – Charlie denkt (KI-Backend; **keine API-Keys in der Firmware**)
-- Phase 4 – Charlie spricht (Sprachassistenz)
+- **Phase 1 – Charlie lebt visuell** ✅ (Gesicht, Idle, Bootscreen)
+- **Phase 2 – Charlie reagiert** ✅ (Sprint 2+3: Emotionen, Mood, Menü/Widgets)
+- **Phase 3 – Charlie geht online** 🔄 (Sprint 4: WLAN + lokale Bridge; echte KI
+  später als eigener Schritt — **keine API-Keys in der Firmware**)
+- Phase 4 – Charlie spricht (Sprachassistenz) — offen
 
 Backlog, Sprints & Entscheidungen: **Notion-Workspace „Pocket Charlie HQ"**.
 
@@ -143,4 +175,7 @@ Backlog, Sprints & Entscheidungen: **Notion-Workspace „Pocket Charlie HQ"**.
 - [docs/PERSONALITY.md](docs/PERSONALITY.md) — Charlies Grundpersönlichkeit (Charakter, Tonfall, Emotionen)
 - [docs/TEST_CHECKLIST.md](docs/TEST_CHECKLIST.md) — manuelle Hardware-Verifikation
 - [docs/LESSONS_LEARNED.md](docs/LESSONS_LEARNED.md) — Stolpersteine & Lösungen
-- [docs/SPRINT_2_PLAN.md](docs/SPRINT_2_PLAN.md) — Plan für **Sprint 2 – Lokale Persönlichkeit** (Next)
+- [docs/SPRINT_2_PLAN.md](docs/SPRINT_2_PLAN.md) — Sprint 2 – Lokale Persönlichkeit (✅ v0.3.0)
+- [docs/SPRINT_3_PLAN.md](docs/SPRINT_3_PLAN.md) — Sprint 3 – Lokale Interaktion (Donut, ✅ umgesetzt)
+- [docs/SPRINT_4_PLAN.md](docs/SPRINT_4_PLAN.md) — Sprint 4 – Éclair: Online Widgets v1 (aktiv)
+- [backend/pocket-charlie-bridge/README.md](backend/pocket-charlie-bridge/README.md) — lokale Bridge (Start, Endpunkte)

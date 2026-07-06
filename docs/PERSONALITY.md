@@ -1,9 +1,11 @@
-# 🎭 Pocket Charlie — Persönlichkeit & lokales Bedienmodell (v0.4.0-dev · Donut 🍩)
+# 🎭 Pocket Charlie — Persönlichkeit & lokales Bedienmodell (v0.5.0-dev · Éclair ⚡)
 
 Charakter- und Verhaltensgrundlage für Pocket Charlie. Sie steuert Charlies
 Ausdruck (Blick, Blinzeln, Augenbrauen, Timing), seine lokale Emotion/Mood und
-die seltene Microcopy. **Stand: Sprint 3 (Donut) — vollständig lokal & offline.**
-Baut auf der Emotion Engine v1 (v0.3.0) auf.
+die seltene Microcopy. **Stand: Sprint 4 (Éclair) — local-first mit optionalem
+Online-Fenster.** Die Persönlichkeit selbst bleibt vollständig lokal (§8/§11);
+Online-Ereignisse sind nur kleine emotionale Momente. Baut auf der Emotion
+Engine v1 (v0.3.0) und dem Donut-Bedienmodell (v0.4.0-dev) auf.
 
 ## 1. Grundcharakter
 
@@ -48,9 +50,9 @@ Assistent, kein zynischer Roboter, nicht geschwätzig, nicht kindlich-übersüß
 
 ## 3. Lokale Screens
 
-Vier lokale Screens, **umlaufend** über BtnA/BtnC gewechselt:
+Fünf lokale Screens, **umlaufend** über BtnA/BtnC gewechselt:
 
-**Face → Clock → Mood → Info**
+**Face → Clock → Mood → Online → Info**
 
 - **Face** — Standard: Emotion Engine, Augenbrauen, Microcopy, Mood, Sleep/Wake.
   `BtnB` → *Thoughtful*.
@@ -58,9 +60,12 @@ Vier lokale Screens, **umlaufend** über BtnA/BtnC gewechselt:
   Zeitquelle wäre eine echte Uhrzeit nicht vertrauenswürdig → ehrliche Uptime statt
   vorgetäuschter Uhrzeit.
 - **Mood** — `mood` + Level (`high` / `neutral` / `low`) + aktuelle Emotion.
-- **Info** — `Pocket Charlie` / `Donut` / `v0.4.0-dev`.
+- **Online** *(Sprint 4)* — WiFi-Status bzw. Bridge/Thought; `BtnB` = Retry/Ping/
+  Thought. Offline ist ein normaler Zustand, kein Fehler.
+- **Info** — `Pocket Charlie` / Codename / Version.
 
-Alles bleibt **lokal**: keine KI, kein WLAN, kein Backend, kein Audio.
+Die Persönlichkeit bleibt **lokal**: keine KI, keine API-Keys, kein Audio.
+Online (WLAN + lokale Bridge) ist seit Sprint 4 ein optionales Zusatzfenster.
 
 ## 4. Mood light
 
@@ -114,9 +119,51 @@ Emotion, **ersetzen** sie nicht, und verdecken die violette Iris nicht.
 - **Annoyed** — innere Enden nach unten geneigt → klar streng.
 - **Sleeping** — ausgeblendet → ruhig, nicht überladen.
 
-*Curious / Confused / Excited / WakingUp sind in der Datentabelle vorbereitet.*
+*Alle Emotionen haben eigene Brauen-Varianten (seit Sprint 4 auch aktiv genutzt).*
 
-## 8. Schnurrbart-Status (geparkt, nicht gelöscht)
+## 8. Neue Emotionen & Online-Momente (Sprint 4)
+
+Fünf vorbereitete Emotionen sind freigeschaltet. Alle sind **kurze Momente**
+(wenige Sekunden, dann automatisch zurück zu Neutral) — nie dauerhafte, kaputte
+Zustände:
+
+| Emotion | Wann | Wirkung |
+|---|---|---|
+| **Curious** | `BtnB` auf Clock/Mood/Info | neugierig-aufmerksam, Brauen leicht hoch, `hmm?`/`oh?` |
+| **Confused** | Bridge down / Online-Timeout | irritiert, aber charmant; asymmetrische Brauen, `huh?`/`eh?` |
+| **Excited** | WLAN verbindet / Reconnect | freudig-wach, offene Brauen, `yay!`/`online!` — nicht hektisch |
+| **Sad** | ab dem 2. Online-Fehler in Folge | sanft traurig, tiefe Brauen, `oh.`/`hm.` — dezent, keine Schwere |
+| **WakingUp** | Touch/Button aus Sleeping | verschlafener Übergang statt hartem Sprung, `...`/`morning` |
+
+**Online-Momente (Einweg-Übersetzung, nie blockierend):**
+- WLAN verbindet → **Excited**.
+- Bridge/Thought erfolgreich → **Happy** (kurze positive Reaktion; Fehlerserie endet).
+- Bridge down / Timeout → **Confused**.
+- Wiederholte Fehler → kurz **Sad**, danach Neutral.
+- **Offline ist kein Fehler:** Charlie bleibt vollständig lokal funktionsfähig;
+  die Emotion Engine hängt nie vom Netz ab.
+
+## 9. Expression Pack v1 (Sprint 4)
+
+Innerhalb einer Emotion gibt es **visuelle Varianten** — beim Betreten zufällig
+gewählt, weich interpoliert. Emotion = Zustand, Expression = wie er aussieht:
+
+- **Happy** wirkt variabler: strahlend · weich/erleichtert · verschmitzt (eine
+  Braue hoch + Seitenblick — der Smug-Moment).
+- **Thoughtful** kann klassisch (Blick nach oben) oder **skeptisch** wirken
+  (Squint + strenge Braue).
+- **Annoyed** kann leicht oder deutlich genervt aussehen.
+- **Tired** kann schwer-müde oder **gelangweilt**-flach wirken.
+- **Onset-Akzent:** bei jedem Emotionswechsel schwingen die Brauen ~0,5 s kurz
+  über — der Wechsel „blitzt auf" (Surprised-Moment), ohne Hektik.
+- **Neutral-Micro-Expressions:** alle ~20–45 s eine seltene, ruhige 1,2-s-Regung
+  (kurz aufmerken · skeptischer Blick · Mini-Lächeln).
+- **Sleeping bleibt bewusst ruhig** — keine Varianten, keine Micro-Expressions.
+
+Stilgrenzen unverändert: keine Meme-Überladung, kein visueller Krach — Charlie
+bleibt ruhig, charmant, minimalistisch. **Companion-Gefühl statt App-Gefühl.**
+
+## 10. Schnurrbart-Status (geparkt, nicht gelöscht)
 
 Der Schnurrbart bleibt eine charmante Idee für Charlies Identität, ist auf dem
 kleinen Display aber **riskant**: er kann mangels Nase wie eine Nase/ein Mund
@@ -129,16 +176,20 @@ Flag `config::kEnableMoustache`, Default `false`) und ist jederzeit reaktivierba
 **In Sprint 3 haben die Augenbrauen Vorrang**, weil sie Emotionen besser
 unterstützen.
 
-## 9. Guardrails (Sprint 3)
+## 11. Guardrails (Sprint 4)
 
-Pocket Charlie bleibt in Sprint 3 **vollständig lokal**:
+Sprint 4 hat die Guardrails **bewusst und kontrolliert** geöffnet — Charlie
+bleibt **local-first**:
 
-- ❌ **keine KI**
-- ❌ **kein WLAN**
-- ❌ **kein Backend / keine Cloud**
-- ❌ **keine API-Keys / Secrets**
-- ❌ **kein Audio**
-- ✅ **alles lokal & offline**
+- ✅ **WLAN** — optional, non-blocking; ohne Secrets läuft alles rein lokal
+- ✅ **lokale Bridge** — kleines lokales Backend (`/health`, `/thought`),
+  statisch/mock, nur im Heimnetz
+- ❌ **keine KI** — `/thought` ist bewusst noch nicht KI-basiert
+- ❌ **keine API-Keys / Secrets in der Firmware** — `PcSecrets.h` bleibt
+  lokal/gitignored
+- ❌ **keine Cloud / keine Accounts / kein Audio**
+- ✅ **Persönlichkeit, Emotionen, Mood und Bedienung funktionieren vollständig
+  offline** — Online ist ein kleines Fenster nach draußen, keine Voraussetzung
 
-> Ein KI-Backend kommt — wenn überhaupt — erst später als eigener, bewusster Sprint;
-> die Guardrails werden dann gezielt geöffnet, nicht vorher.
+> Eine echte KI-Anbindung wäre ein eigener, bewusster Sprint (über die Bridge,
+> nie mit Keys in der Firmware) — nur nach ausdrücklicher Freigabe.

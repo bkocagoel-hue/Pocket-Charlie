@@ -7,11 +7,47 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [Unreleased] – v0.4.0-dev – Donut 🍩 · Sprint 3: Lokale Interaktion
+## [Unreleased] – v0.5.0-dev – Éclair ⚡ · Sprint 4: Online Widgets v1
 
-> Arbeitsstand (`-dev`), noch **kein** Release. Sprint 3 bleibt **vollständig lokal**:
-> kein WLAN, keine KI, kein Backend, kein Audio. (Ein KI-Backend wäre – wenn
-> überhaupt – ein späterer, eigener Sprint.)
+> Arbeitsstand auf Branch `sprint-4-eclair-online-widgets`, **kein** Release.
+> **Guardrail-Wechsel, aber local-first:** WLAN + lokale Bridge jetzt erlaubt;
+> ohne beides läuft Charlie unverändert lokal. **Keine API-Keys in der
+> Firmware, keine echte KI** — `/thought` ist bewusst statisch/mock.
+
+### Added
+- **Optionale WLAN-Schicht** (`lib/Network/NetworkManager`) — non-blocking FSM
+  (`off/trying/online/offline`), 15-s-Timeout, max. 3 Auto-Retries mit Backoff,
+  manueller Retry per BtnB. Secrets-Handling: `PcSecrets.example.h` (Vorlage im
+  Repo) + gitignorte `PcSecrets.h`; ohne Secrets rein lokaler Modus.
+- **Online-Screen** — Navigation jetzt Face → Clock → Mood → **Online** → Info;
+  zeigt WiFi-Status, Bridge-Status und Online-Thought; `BtnB` = Retry/Ping/Thought.
+- **Lokale Bridge** (`backend/pocket-charlie-bridge/`, Python-Stdlib, 0 Deps):
+  `GET /health`, `GET /thought` (kurze statische Sätze); README mit Setup.
+- **OnlineClient** (`lib/Online/`) — HTTP im FreeRTOS-Task auf Core 0, 2-s-
+  Timeout, kein UI-Freeze; charmante Fallbacks (`offline / still me`).
+- **Emotion Expansion v2** — Curious/Confused/Excited/Sad/WakingUp
+  freigeschaltet (Namen, Trigger, Microcopy). Online-Ereignisse als kurze
+  emotionale Momente: verbindet → Excited, Fehler → Confused, Fehlerserie →
+  dezent Sad, Thought → Happy; sanftes Aufwachen (Sleeping → WakingUp).
+- **Expression Pack v1** — Expression-Varianten je Emotion (Happy×3,
+  Thoughtful/Annoyed/Curious/Tired×2), Onset-Akzent beim Emotionswechsel,
+  seltene Neutral-Micro-Expressions; Sleeping bleibt bewusst ruhig.
+
+### Verified
+- E2 (WLAN), E3 (Bridge `/health`), E4A (Thought), E4B (Emotionen), E4C
+  (Expressions) einzeln auf Hardware verifiziert (M5Stack CoreS3, 2026-07-06).
+  Voller Gesamtdurchlauf vor Release: offen (siehe TEST_CHECKLIST).
+
+### Out of Scope (bewusst)
+- Keine echte KI, kein Wetter, kein NTP, kein Audio, keine Cloud/Accounts,
+  keine API-Keys/Secrets im Repo.
+
+---
+
+## [Unreleased] – v0.4.0-dev – Donut 🍩 · Sprint 3: Lokale Interaktion (Release ausstehend)
+
+> Hardware-verifizierter Stand auf `main`, noch **kein** Release/Tag. Sprint 3
+> blieb **vollständig lokal**: kein WLAN, keine KI, kein Backend, kein Audio.
 
 ### Added
 - **`InputContext`** (`lib/Interaction/`) – klassifiziert den Eingabe-Snapshot zu

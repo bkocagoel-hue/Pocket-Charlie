@@ -111,24 +111,38 @@ Microcopy-Stil bleibt: ruhig, charmant, minimalistisch, leicht frech — z. B.
 · `still here` (Sad) · `...`, `morning` (WakingUp) · offline-charmant:
 `offline / still me`, `net? / nah`, `bridge / zzz`.
 
-## 8. Einheiten & Teststrategie
+## 8. Einheiten & Umsetzungsstand (2026-07-06)
 
-| Einheit | Inhalt | Commit-Regel |
+| Einheit | Inhalt | Status |
 |---|---|---|
-| **E1 – Setup** | Branch, `v0.5.0-dev`, Codename `Eclair`, dieser Plan; keine Netzwerklogik | Commit nach grünem Build |
-| **E2 – WLAN-Grundlage** | NetworkManager, Secrets-Handling, Offline-Fallback, Online-Screen (WiFi-Status) | Build + **Hardware-Test vor Commit** |
-| **E3 – Backend Bridge** | `server.py` (`/health`), Backend-README, OnlineClient-Ping, Timeout | Build + **Hardware-Test vor Commit** |
-| **E4 – Online Thought** | `/thought`, BtnB-Refresh, Fallbacks, Emotion-Verknüpfung | Build + **Hardware-Test vor Commit** |
-| **E5 – Docs/Polish** | TEST_CHECKLIST, README-Dev-Setup, CHANGELOG `[Unreleased]`, PERSONALITY | Doku-Commit nach Prüfung |
+| **E1 – Setup** | Branch, `v0.5.0-dev`, Codename `Eclair`, dieser Plan | ✅ umgesetzt (`da9a00c`) |
+| **E2 – WLAN-Grundlage** | NetworkManager (non-blocking FSM, begrenzte Retries), Secrets-Handling, Offline-Fallback, Online-Screen (WiFi-Status) | ✅ umgesetzt + hardware-verifiziert (`7bb04d2`) |
+| **E3 – Backend Bridge** | `server.py` (`/health`, Python-Stdlib, 0 Deps), Backend-README, OnlineClient-Ping im Core-0-Task, Timeout | ✅ umgesetzt + hardware-verifiziert (`281c655`) |
+| **E4A – Online Thought** | `/thought` (statisch/mock), BtnB-Kaskade health→thought, Fallbacks, Text-Kürzung, Display-Auto-Shrink | ✅ umgesetzt + hardware-verifiziert (`9eab7a3`) |
+| **E4B – Emotion Expansion v2** | Curious/Confused/Excited/Sad/WakingUp freigeschaltet: Namen, Trigger, Microcopy, Online→Emotion-Momente | ✅ umgesetzt + hardware-verifiziert (`10175cc`) |
+| **E4C – Expression Pack v1** *(eingeschoben)* | Expression-Varianten je Emotion (Happy×3, Thoughtful/Annoyed/Curious/Tired×2), Onset-Akzent, Neutral-Micro-Expressions — nur `lib/Face/` | ✅ umgesetzt + hardware-verifiziert (`2ffec02`) |
+| **E5 – Docs/Polish** | TEST_CHECKLIST, README-Dev-Setup, CHANGELOG `[Unreleased]`, PERSONALITY, dieser Plan | 🔄 aktuelle Einheit (nur Doku) |
 
-## 9. Definition of Done (Turbo v1)
+**Festgehaltene Prinzipien (umgesetzt):**
+- **local-first** bleibt Grundprinzip — Online ist Zusatz, kein Zwang; offline ist
+  ein normaler Zustand.
+- **Keine API-Keys in der Firmware**; `PcSecrets.h` bleibt lokal/gitignored
+  (Vorlage `PcSecrets.example.h` im Repo).
+- Die Bridge ist **lokal und statisch/mock** — `/health` und `/thought`
+  existieren; `/thought` ist **bewusst noch nicht KI-basiert**.
+- **TODO/später:** Wetter (nur via Bridge, Mock zuerst), NTP/echte Uhrzeit,
+  echte KI-Anbindung (eigener Sprint, nur nach ausdrücklicher Freigabe).
 
-Branch existiert · `v0.5.0-dev` gesetzt · Sprint-4-Doku vorhanden · WLAN optional
-& non-blocking · Online/Offline-Status sichtbar · Bridge mit `/health` · M5Stack
-kann Bridge pingen · Online-Screen existiert · BtnB-Refresh funktioniert ·
-Offline-Fallback funktioniert · **keine Secrets im Repo, keine Keys in Firmware**
-· Donut-Funktionen intakt · Build grün · Hardware-Testpunkte dokumentiert ·
-kein Release/Tag/Push ohne Freigabe.
+## 9. Definition of Done (Turbo v1) — Stand
+
+✅ Branch existiert · ✅ `v0.5.0-dev` gesetzt · ✅ Sprint-4-Doku vorhanden ·
+✅ WLAN optional & non-blocking · ✅ Online/Offline-Status sichtbar · ✅ Bridge
+mit `/health` · ✅ M5Stack kann Bridge pingen · ✅ Online-Screen existiert ·
+✅ BtnB-Refresh funktioniert · ✅ Offline-Fallback funktioniert · ✅ keine
+Secrets im Repo, keine Keys in Firmware · ✅ Donut-Funktionen intakt · ✅ Builds
+grün · ✅ Hardware-Testpunkte dokumentiert (TEST_CHECKLIST) · ✅ kein
+Release/Tag/Push ohne Freigabe. **Offen:** voller Éclair-Gesamtdurchlauf (⏳ in
+TEST_CHECKLIST) vor einem späteren Release.
 
 ## 10. Risiken
 
