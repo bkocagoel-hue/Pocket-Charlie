@@ -27,27 +27,34 @@ Legende: ✅ bestanden · ⏳ offen · ⚠️ Einschränkung/Befund
   Expressions selten; Sleeping unverändert ruhig (keine Micro-Expressions im
   Schlaf); Pupillen/Brauen/Lid-Schließung/Mund stabil.
 
-### ⏳ Voller Éclair-Gesamtdurchlauf (vor Release auszuführen)
+### ✅ Voller Éclair-Gesamtdurchlauf — bestanden (2026-07-06)
+
+**Gesamtergebnis:** ✅ Lokaler Modus · ✅ Online-Modus · ✅ Fallback/Recovery ·
+✅ 11/11 Emotionen · ✅ Expression Pack · ✅ kein Freeze/Reboot · ✅ kein
+Flackern. **Auffälligkeiten:** keine.
 
 **Lokal**
-- ⏳ Face · Touch → Happy · Piesacken → Annoyed · BtnB auf Face → Thoughtful.
-- ⏳ Clock/Uptime · Mood · Online · Info; Navigation umlaufend (BtnA/BtnC).
-- ⏳ Sleep/Wake stabil; kein Freeze/Flackern/Reboot.
+- ✅ Face · Touch → Happy · Piesacken → Annoyed · BtnB auf Face → Thoughtful.
+- ✅ Clock/Uptime · Mood · Online · Info; Navigation umlaufend (BtnA/BtnC).
+- ✅ Sleep/Wake stabil; kein Freeze/Flackern/Reboot.
 
 **Online**
-- ⏳ WLAN ohne Secrets → `wifi off / no secrets`; alles Lokale funktioniert.
-- ⏳ WLAN mit Secrets → `online` + IP.
-- ⏳ Bridge aus → `down`/Fallback · Bridge an → `/health` ok.
-- ⏳ `/thought` liefert kurze lokale Sätze; Backend stoppen → kein Freeze;
-  Backend wieder starten → Verbindung funktioniert wieder.
+- ✅ WLAN ohne Secrets → `wifi off / no secrets`; alles Lokale funktioniert.
+- ✅ WLAN mit Secrets → `online` + IP.
+- ✅ Bridge aus → `down`/Fallback · Bridge an → `/health` ok.
+- ✅ `/thought` liefert kurze lokale Sätze; Backend stoppen → kein Freeze;
+  Backend wieder starten → Recovery ohne Neustart.
 
 **Emotionen (alle 11)**
-- ⏳ Neutral · Happy · Tired · Sleeping · Thoughtful · Annoyed · Curious ·
+- ✅ Neutral · Happy · Tired · Sleeping · Thoughtful · Annoyed · Curious ·
   Confused · Excited · Sad · WakingUp.
 
 **Expressions**
-- ⏳ Happy-Varianten · Thoughtful/Skeptical · Annoyed-Varianten · Tired/Bored.
-- ⏳ Onset-Akzent bei Wechseln · Neutral-Micro-Expressions · Sleeping bleibt ruhig.
+- ✅ Happy-Varianten · Thoughtful/Skeptical · Annoyed-Varianten · Tired/Bored.
+- ✅ Onset-Akzent bei Wechseln · Neutral-Micro-Expressions · Sleeping bleibt ruhig.
+
+> Getestet auf HEAD `339d6e0` (v0.5.0-dev). Sprint 4 Turbo v1 ist damit
+> vollständig hardware-verifiziert; ein Release erfolgt separat nach Freigabe.
 
 ---
 
