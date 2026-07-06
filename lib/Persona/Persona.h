@@ -37,6 +37,11 @@ class Persona {
   // Externe Aktion (z. B. BtnB im Face-Screen) -> kurz Thoughtful.
   void pokeThoughtful();
 
+  // Sprint 4 (E4B): generischer externer Emotions-Impuls. Kurzer transienter
+  // Zustand (durMs), danach automatisch zurueck zu Neutral. Online-Ereignisse
+  // nutzen das als kleine emotionale Momente - nie blockierend, nie dauerhaft.
+  void poke(Emotion e, std::uint32_t durMs);
+
  private:
   void setTransient(Emotion e, std::uint32_t nowMs, std::uint32_t durMs);
 

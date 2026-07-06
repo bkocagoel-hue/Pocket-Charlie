@@ -11,6 +11,7 @@ constexpr std::uint32_t kAnnoyedMs     = 1800;
 constexpr std::uint32_t kThoughtfulMs  = 2800;   // BtnB kurz -> Thoughtful
 constexpr std::uint32_t kIdleTiredMs   = 20000;  // Inaktivitaet -> Tired
 constexpr std::uint32_t kIdleSleepingMs = 40000;  // Inaktivitaet -> Sleeping
+constexpr std::uint32_t kWakingUpMs    = 1800;   // sanfter Uebergang aus Sleeping
 
 // Rapid-Tap -> Annoyed (bewusst nicht zu empfindlich).
 constexpr std::uint16_t kAnnoyTaps     = 4;
@@ -24,6 +25,12 @@ const char* emotionName(Emotion e) {
     case Emotion::Thoughtful: return "Thoughtful";
     case Emotion::Annoyed:    return "Annoyed";
     case Emotion::Sleeping:   return "Sleeping";
+    // Sprint 4 (E4B): freigeschaltete Emotionen.
+    case Emotion::Curious:    return "Curious";
+    case Emotion::Confused:   return "Confused";
+    case Emotion::Excited:    return "Excited";
+    case Emotion::Sad:        return "Sad";
+    case Emotion::WakingUp:   return "WakingUp";
     default:                  return "?";
   }
 }
@@ -83,7 +90,12 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
     } else if (rapid) {
       setTransient(Emotion::Annoyed, nowMs, kAnnoyedMs);
     } else if (touched) {
-      setTransient(Emotion::Happy, nowMs, kTouchHappyMs);
+      if (current_ == Emotion::Sleeping) {
+        // Sanft aufwachen statt hart zu Happy zu springen (E4B).
+        setTransient(Emotion::WakingUp, nowMs, kWakingUpMs);
+      } else {
+        setTransient(Emotion::Happy, nowMs, kTouchHappyMs);
+      }
     }
 
     // Transienten Zustand auslaufen lassen -> Neutral.
@@ -100,7 +112,10 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
         current_ = Emotion::Sleeping;
       } else if (idle >= kIdleTiredMs) {
         current_ = Emotion::Tired;
-      } else if (current_ == Emotion::Tired || current_ == Emotion::Sleeping) {
+      } else if (current_ == Emotion::Sleeping) {
+        // Button-Wake aus dem Schlaf: sanfter WakingUp-Moment (E4B).
+        setTransient(Emotion::WakingUp, nowMs, kWakingUpMs);
+      } else if (current_ == Emotion::Tired) {
         current_ = Emotion::Neutral;  // aufgewacht
       }
     }
@@ -134,11 +149,13 @@ void Persona::update(std::uint32_t nowMs, const Input& input) {
   }
 }
 
-void Persona::pokeThoughtful() {
-  pending_ = Emotion::Thoughtful;
-  pendingDur_ = kThoughtfulMs;
+void Persona::poke(Emotion e, std::uint32_t durMs) {
+  pending_ = e;
+  pendingDur_ = durMs;
   hasPending_ = true;
 }
+
+void Persona::pokeThoughtful() { poke(Emotion::Thoughtful, kThoughtfulMs); }
 
 const char* Persona::stateName() const { return emotionName(current_); }
 

@@ -11,6 +11,13 @@ namespace pc {
 namespace {
 constexpr std::uint32_t kSayMs    = 1600;  // Anzeigedauer einer Textblase
 constexpr std::uint32_t kSayGapMs = 3000;  // Mindestabstand zwischen Spruechen
+
+// Sprint 4 E4B: Dauer der kleinen emotionalen Online-Momente (transient).
+constexpr std::uint32_t kExcitedMs = 2500;  // WLAN verbunden
+constexpr std::uint32_t kHappyNetMs = 1600;  // Thought erfolgreich
+constexpr std::uint32_t kConfusedMs = 2200;  // Bridge down / Timeout
+constexpr std::uint32_t kSadMs      = 2500;  // wiederholter Online-Fehler
+constexpr std::uint32_t kCuriousMs  = 3000;  // BtnB auf Text-Screens
 }  // namespace
 
 void App::setup() {
@@ -65,6 +72,40 @@ void App::loop() {
     online_.reset();  // altes Bridge-Ergebnis ist ohne WLAN nicht mehr ehrlich
   }
 
+  // Sprint 4 E4B: Online-Ereignisse als kleine emotionale Momente uebersetzen.
+  // Einweg (Persona haengt NIE vom Netz ab); Fehler sind kurze Momente, keine
+  // kaputte Dauerstimmung - danach faellt alles automatisch auf Neutral zurueck.
+  if (network_.justConnected()) {
+    persona_.poke(Emotion::Excited, kExcitedMs);
+  }
+  {
+    const int bs = static_cast<int>(online_.state());
+    const int ts = static_cast<int>(online_.thoughtState());
+    const bool pingFailed =
+        (bs == static_cast<int>(BridgeState::Down) &&
+         prevBridge_ == static_cast<int>(BridgeState::Checking));
+    const bool thoughtFailed =
+        (ts == static_cast<int>(ThoughtState::Failed) &&
+         prevThought_ == static_cast<int>(ThoughtState::Fetching));
+    if (pingFailed || thoughtFailed) {
+      ++onlineFails_;
+      persona_.poke(onlineFails_ >= 2 ? Emotion::Sad : Emotion::Confused,
+                    onlineFails_ >= 2 ? kSadMs : kConfusedMs);
+    }
+    const std::uint8_t seq = online_.thoughtSeq();
+    if (seq != prevThoughtSeq_) {  // neuer Thought angekommen
+      prevThoughtSeq_ = seq;
+      onlineFails_ = 0;
+      persona_.poke(Emotion::Happy, kHappyNetMs);
+    }
+    if (bs == static_cast<int>(BridgeState::Ok) &&
+        prevBridge_ == static_cast<int>(BridgeState::Checking)) {
+      onlineFails_ = 0;  // Health ok -> Fehlerserie beendet
+    }
+    prevBridge_ = bs;
+    prevThought_ = ts;
+  }
+
   // Sprint 3: Eingaben zu Intents klassifizieren (read-only) und loggen.
   // Aendert (noch) kein Verhalten - Persona/Face bleiben zustaendig.
   interaction_.update(now, input_);
@@ -106,6 +147,10 @@ void App::loop() {
     } else {
       if (menu_.current() == Screen::Online) {
         network_.retry();  // WLAN offline: BtnB = Verbindungs-Retry
+      } else {
+        // E4B: BtnB auf Clock/Mood/Info -> kurzer Curious-Moment (sichtbar
+        // z. B. als Emotion im Mood-Screen oder beim Rueckwechsel zum Face).
+        persona_.poke(Emotion::Curious, kCuriousMs);
       }
       flashActive_ = true;  // kurze "ok"-Rueckmeldung
       screenFlashUntil_ = now + 1000;
@@ -119,11 +164,28 @@ void App::loop() {
   const Emotion emo = persona_.current();
   const bool sayAllowed = (now - lastSayMs_ >= kSayGapMs);
   if (emo != prevEmotion_) {
-    if (sayAllowed && emo == Emotion::Happy) {
-      face_.say(phrases::kGreet[random(phrases::kGreetN)], kSayMs);
-      lastSayMs_ = now;
-    } else if (sayAllowed && emo == Emotion::Annoyed) {
-      face_.say(phrases::kGrumble[random(phrases::kGrumbleN)], kSayMs);
+    // Emotionswechsel -> passende, seltene Microcopy (E4B: neue Emotionen).
+    const char* phrase = nullptr;
+    switch (emo) {
+      case Emotion::Happy:
+        phrase = phrases::kGreet[random(phrases::kGreetN)]; break;
+      case Emotion::Annoyed:
+        phrase = phrases::kGrumble[random(phrases::kGrumbleN)]; break;
+      case Emotion::Curious:
+        phrase = phrases::kCurious[random(phrases::kCuriousN)]; break;
+      case Emotion::Confused:
+        phrase = phrases::kConfused[random(phrases::kConfusedN)]; break;
+      case Emotion::Excited:
+        phrase = phrases::kExcited[random(phrases::kExcitedN)]; break;
+      case Emotion::Sad:
+        phrase = phrases::kSad[random(phrases::kSadN)]; break;
+      case Emotion::WakingUp:
+        phrase = phrases::kWakeUp[random(phrases::kWakeUpN)]; break;
+      default:
+        break;  // Neutral/Tired/Sleeping/Thoughtful: bewusst wortlos
+    }
+    if (sayAllowed && phrase != nullptr) {
+      face_.say(phrase, kSayMs);
       lastSayMs_ = now;
     }
     prevEmotion_ = emo;

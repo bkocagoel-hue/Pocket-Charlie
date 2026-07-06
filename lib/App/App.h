@@ -69,6 +69,13 @@ class App {
   // aendert (beide kombiniert in einem Wert, siehe renderScreen()).
   int lastNetState_ = -1;
 
+  // Sprint 4 E4B: Online-Ereignisse -> kleine emotionale Momente.
+  // Flanken-Erkennung fuer Bridge-/Thought-Ausgang + Fehlerzaehler (Sad).
+  int prevBridge_ = -1;
+  int prevThought_ = -1;
+  std::uint8_t prevThoughtSeq_ = 0;
+  std::uint8_t onlineFails_ = 0;
+
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
   //   WifiService wifi_;   // Netzwerk (Sprint 0/3)
 };
