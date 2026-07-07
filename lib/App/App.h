@@ -22,6 +22,7 @@
 #include "OnlineClient.h"
 #include "Persona.h"
 #include "Productivity.h"
+#include "Sound.h"
 
 namespace pc {
 
@@ -50,6 +51,7 @@ class App {
   NetworkManager network_;  // Sprint 4: optionales WLAN (local-first)
   OnlineClient   online_;   // Sprint 4: Bridge-Ping (Task auf Core 0)
   Productivity   prod_;     // Sprint 5: Stopwatch/Countdown/Pomodoro
+  Sound          sound_;    // Sprint 5: dezentes Timer-Audio (abschaltbar)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;

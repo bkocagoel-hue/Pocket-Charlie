@@ -48,6 +48,7 @@ void App::setup() {
   online_.begin();   // Sprint 4 E3: Bridge-Ping-Task (Core 0); ohne Bridge-URL
                      // deaktiviert. Pings nur manuell via BtnB.
   prod_.begin();     // Sprint 5: Fokus-Werkzeuge (rein lokal)
+  sound_.begin();    // Sprint 5: dezentes Timer-Audio (stumm-sicher)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -186,12 +187,15 @@ void App::loop() {
       case ProdEvent::ModeChanged: persona_.poke(Emotion::Curious, 1500);    break;
       case ProdEvent::CountdownDone:
         persona_.poke(Emotion::Happy, 2500);  // Timer gelandet
+        sound_.playTimerDone();
         break;
       case ProdEvent::FocusDone:
         persona_.poke(Emotion::Happy, 2000);  // Break beginnt
+        sound_.playFocusDone();
         break;
       case ProdEvent::BreakDone:
         persona_.poke(Emotion::Excited, 2500);  // Durchgang geschafft
+        sound_.playBreakDone();
         break;
       default: break;  // Paused: bewusst ruhig (kein Poke)
     }
