@@ -24,6 +24,10 @@ class Menu {
 
   Screen current() const { return cur_; }
 
+  // Fuer die Navigations-Hinweise (Sprint 5): Position + Gesamtzahl.
+  int index() const { return static_cast<int>(cur_); }
+  static constexpr int count() { return kCount; }
+
   const char* name() const {
     switch (cur_) {
       case Screen::Face:   return "Face";

@@ -24,6 +24,12 @@ class Display {
   // Generischer Text-Screen (Sprint 3): Titel klein + Hauptinfo gross + Sub.
   void showScreen(const char* title, const char* mainText, const char* sub);
 
+  // Navigations-Hinweise (Sprint 5): dezente Leiste am unteren Rand, direkt
+  // ueber den A/B/C-Touch-Zonen. Punktreihe = Screens (aktueller violett),
+  // "<" / ">" = BtnA/BtnC, Mitte = optionale BtnB-Aktion (z. B. "B: start").
+  // Nach showScreen() aufrufen; das Face zeichnet bewusst keine Leiste.
+  void drawNavBar(int index, int count, const char* action);
+
  private:
   void clear();
 };

@@ -277,64 +277,69 @@ void App::renderClockWidget(std::uint32_t nowMs) {
            static_cast<unsigned>((t / 60) % 60),
            static_cast<unsigned>(t % 60));
   display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
+  display_.drawNavBar(menu_.index(), Menu::count(), "");
 }
 
 void App::renderMoodWidget() {
   display_.showScreen("mood", persona_.moodName(),
                       flashActive_ ? "ok" : persona_.stateName());
+  display_.drawNavBar(menu_.index(), Menu::count(), "");
 }
 
 void App::renderOnlineWidget() {
   // Offline ist ein normaler Zustand: kurze, ruhige Anzeige statt
-  // Fehlermeldungs-Wand. Ohne WLAN -> WiFi-Sicht (E2, BtnB = retry);
-  // mit WLAN -> Bridge-Sicht (E3, BtnB = ping).
-  if (!network_.online()) {
-    const char* sub = "";
-    switch (network_.state()) {
-      case NetState::Offline:  sub = "B: retry";   break;
-      case NetState::Disabled: sub = "no secrets"; break;
-      default:                 break;  // Connecting: keine Sub-Zeile
-    }
-    display_.showScreen("wifi", network_.stateName(),
-                        flashActive_ ? "ok" : sub);
-    return;
-  }
-
-  // Thought-Sicht (E4A) hat Vorrang vor der Health-Sicht.
-  const ThoughtState ts = online_.thoughtState();
-  if (ts == ThoughtState::Fetching) {
-    display_.showScreen("online", "waiting...", "");
-    return;
-  }
-  if (online_.state() == BridgeState::Checking) {
-    display_.showScreen("bridge", "checking", "");
-    return;
-  }
-  if (ts == ThoughtState::Ok) {
-    display_.showScreen("online", online_.thoughtText(), "B: again");
-    return;
-  }
-  if (ts == ThoughtState::Failed) {
-    // Charmanter Fallback statt Fehlermeldung; BtnB pingt danach /health.
-    display_.showScreen("online", "offline", "still me");
-    return;
-  }
-
-  // Health-Sicht (E3): ready/ok/down/no url.
+  // Fehlermeldungs-Wand. Ohne WLAN -> WiFi-Sicht (BtnB = retry); mit WLAN ->
+  // Bridge-/Thought-Sicht. Die BtnB-Hinweise leben in der NavBar (Sprint 5),
+  // die Sub-Zeile traegt nur noch Status (IP, "still me", ...).
+  const char* title = "wifi";
+  const char* mainText = network_.stateName();
   const char* sub = "";
-  switch (online_.state()) {
-    case BridgeState::Idle: sub = "B: ping";    break;
-    case BridgeState::Ok:   sub = "B: thought"; break;
-    case BridgeState::Down: sub = "B: ping";    break;
-    default:                break;  // no url: keine Sub-Zeile
+  const char* action = "";
+
+  if (!network_.online()) {
+    switch (network_.state()) {
+      case NetState::Offline:  action = "B: retry";  break;
+      case NetState::Disabled: sub = "no secrets";   break;
+      default:                 break;  // Connecting: nur "trying"
+    }
+  } else {
+    const ThoughtState ts = online_.thoughtState();
+    if (ts == ThoughtState::Fetching) {
+      title = "online";
+      mainText = "waiting...";
+    } else if (online_.state() == BridgeState::Checking) {
+      title = "bridge";
+      mainText = "checking";
+    } else if (ts == ThoughtState::Ok) {
+      title = "online";
+      mainText = online_.thoughtText();
+      action = "B: again";
+    } else if (ts == ThoughtState::Failed) {
+      // Charmanter Fallback statt Fehlermeldung; BtnB pingt danach /health.
+      title = "online";
+      mainText = "offline";
+      sub = "still me";
+      action = "B: ping";
+    } else {
+      title = "bridge";
+      mainText = online_.stateName();
+      switch (online_.state()) {
+        case BridgeState::Idle: action = "B: ping";    break;
+        case BridgeState::Ok:   action = "B: thought"; break;
+        case BridgeState::Down: action = "B: ping";    break;
+        default:                break;  // no url
+      }
+    }
   }
-  display_.showScreen("bridge", online_.stateName(),
-                      flashActive_ ? "ok" : sub);
+
+  display_.showScreen(title, mainText, flashActive_ ? "ok" : sub);
+  display_.drawNavBar(menu_.index(), Menu::count(), action);
 }
 
 void App::renderInfoWidget() {
   display_.showScreen(config::kAppName, config::kAppCodename,
                       flashActive_ ? "ok" : config::kAppVersion);
+  display_.drawNavBar(menu_.index(), Menu::count(), "");
 }
 
 }  // namespace pc
