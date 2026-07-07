@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 # ============================================================================
-#  pocket-charlie-bridge - minimaler lokaler Backend-Server (Sprint 4, E3)
+#  pocket-charlie-bridge - minimaler lokaler Backend-Server (Sprint 4, E3;
+#  Provider-System seit Sprint 6, E1)
 #
 #  Nur Python-Standardbibliothek: 0 Dependencies, kein Flask/FastAPI, keine
-#  Datenbank, keine API-Keys, keine KI, keine Cloud. Der M5Stack prueft ueber
-#  GET /health, ob die Bridge im Heimnetz erreichbar ist.
+#  Datenbank, keine API-Keys, keine Cloud. Der M5Stack prueft ueber GET
+#  /health, ob die Bridge im Heimnetz erreichbar ist; GET /thought liefert
+#  einen kurzen Text ueber einen austauschbaren ThoughtProvider (Default:
+#  "mock" - lokal/statisch, keine KI).
+#
+#  Provider waehlen:  PC_BRIDGE_PROVIDER=mock python server.py  (Default)
 #
 #  Start:   python backend/pocket-charlie-bridge/server.py
 #  (oder:   py backend/pocket-charlie-bridge/server.py)
 # ============================================================================
 
 import json
+import os
 import random
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST = "0.0.0.0"  # im ganzen Heimnetz erreichbar (M5Stack nutzt die Laptop-IP)
 PORT = 8787
-VERSION = "0.2.0"
+VERSION = "0.3.0"
+DEFAULT_PROVIDER = "mock"
 
 # Kurze, statische lokale "Gedanken" (E4A: mock/static, keine KI, kein Key).
 # Displaytauglich halten: max. ~26 Zeichen, ruhig und charmant.
@@ -31,6 +38,46 @@ THOUGHTS = [
 ]
 
 
+class ThoughtProvider:
+    """Liefert den Text fuer GET /thought. Austauschbar, /thought-Contract
+    (`{"text": "..."}`) bleibt fuer die Firmware in jedem Fall stabil."""
+
+    name = "base"
+
+    def get_thought(self) -> str:
+        raise NotImplementedError
+
+
+class MockThoughtProvider(ThoughtProvider):
+    """Lokal/statisch, keine KI, kein Netzwerk - immer verfuegbarer Fallback."""
+
+    name = "mock"
+
+    def get_thought(self) -> str:
+        return random.choice(THOUGHTS)
+
+
+# Weitere Provider (z. B. "local-ai") kommen als eigene Klasse dazu; bei
+# Fehlern/Timeout melden sie sich nicht selbst ab, sondern der Aufrufer faellt
+# auf MockThoughtProvider zurueck (siehe resolve_provider).
+PROVIDERS = {
+    "mock": MockThoughtProvider(),
+}
+
+
+def resolve_provider(requested: str) -> ThoughtProvider:
+    provider = PROVIDERS.get(requested)
+    if provider is None:
+        print(f"[bridge] unbekannter PC_BRIDGE_PROVIDER '{requested}', "
+              f"falle zurueck auf 'mock'.")
+        return PROVIDERS[DEFAULT_PROVIDER]
+    return provider
+
+
+ACTIVE_PROVIDER = resolve_provider(
+    os.environ.get("PC_BRIDGE_PROVIDER", DEFAULT_PROVIDER))
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "pocket-charlie-bridge/" + VERSION
 
@@ -38,9 +85,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send_json(
                 {"ok": True, "service": "pocket-charlie-bridge",
-                 "version": VERSION})
+                 "version": VERSION, "provider": ACTIVE_PROVIDER.name})
         elif self.path == "/thought":
-            self._send_json({"text": random.choice(THOUGHTS)})
+            self._send_json({"text": ACTIVE_PROVIDER.get_thought()})
         else:
             self._send_json({"ok": False, "error": "unknown path"}, status=404)
 
@@ -60,6 +107,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     server = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"[bridge] pocket-charlie-bridge v{VERSION} "
+          f"(provider: {ACTIVE_PROVIDER.name}) "
           f"lauscht auf http://{HOST}:{PORT}  (Strg+C beendet)")
     print(f"[bridge] Test im Browser: http://localhost:{PORT}/health")
     try:

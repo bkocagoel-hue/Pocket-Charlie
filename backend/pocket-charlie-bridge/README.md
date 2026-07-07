@@ -27,10 +27,21 @@ Schnelltest im Browser auf dem Laptop:
 
 | Endpunkt | Antwort |
 |---|---|
-| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.2.0"}` |
-| `GET /thought` | `{"text": "still here."}` — zufälliger kurzer Satz aus einer **lokalen, statischen** Liste (E4A: mock/static; keine KI, keine externen Requests, kein API-Key) |
+| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.3.0", "provider": "mock"}` |
+| `GET /thought` | `{"text": "still here."}` — Text kommt vom aktiven `ThoughtProvider` (Default: `mock`, lokal/statisch, keine KI, kein API-Key) |
 
 Unbekannte Pfade liefern `404`.
+
+## Provider wählen
+
+```bash
+PC_BRIDGE_PROVIDER=mock python backend/pocket-charlie-bridge/server.py
+```
+
+`mock` ist Default und einzig verfügbarer Provider; weitere (z. B. ein
+lokales LLM) kommen als eigene `ThoughtProvider`-Klasse dazu, ohne dass sich
+der `/thought`-Contract für die Firmware ändert. Unbekannte Werte fallen mit
+Log-Hinweis auf `mock` zurück.
 
 ## Bridge-URL für den M5Stack konfigurieren
 
