@@ -7,6 +7,28 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [Unreleased] – v0.6.0-dev – Fudge 🍫 · Sprint 5: Productivity Core
+
+### Added
+- **Navigations-Hinweise** auf allen Widget-Screens: Punktreihe (aktueller
+  Screen violett) + `<`/`>` über den BtnA/BtnC-Zonen + BtnB-Aktion als Text.
+- **Productivity-Screen** mit drei Modi (BtnB kurz = start/pause/weiter,
+  BtnB **halten** = reset bzw. Moduswechsel, wenn nichts läuft):
+  **Stopwatch** · **Countdown** (5 min, stoppt sauber bei `00:00`) ·
+  **Pomodoro** (25/5, Break startet automatisch, Session-Zähler). Alles
+  non-blocking; Timer laufen auch weiter, wenn man den Screen wechselt.
+- **Audio-Feedback v1**: kurzer, dezenter Einzelton bei Timer-/Fokus-/Break-
+  Ende (`M5.Speaker.tone`, non-blocking, stumm-sicher ohne Speaker).
+- **Settings-Screen** (Runtime): Sound on/off per BtnB, mit kurzer Hörprobe.
+- **Produktivitäts-Microcopy + Emotionen**: Start → Thoughtful, Done →
+  Happy/Excited, Reset → kurz Confused; ruhige Sätze im Charlie-Stil.
+
+### Changed
+- Screen-Reihenfolge: Face → Clock → Mood → Online → **Productivity** →
+  **Settings** → Info. Firmware-Version auf `0.6.0-dev` (Codename `Fudge`).
+
+---
+
 ## [0.5.0] – 2026-07-06 – Éclair ⚡ · Sprint 4: Online Widgets v1
 
 > Erster öffentlicher Release nach **Cheesecake v0.3.0**. **Donut (Sprint 3) war
@@ -158,6 +180,7 @@ Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
 ---
 
+[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.5.0...HEAD
 [0.5.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.3.0...v0.5.0
 [0.3.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.1.0...v0.2.0

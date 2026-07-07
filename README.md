@@ -20,6 +20,10 @@ Fokus: Persönlichkeit, Display, Interaktion — später KI-Anbindung.
   lokale Bridge (`/health`, `/thought`), Emotion Expansion v2, Expression Pack v1.
   **local-first**, keine API-Keys in der Firmware, noch keine echte KI.
   Hardware-verifiziert (M5Stack CoreS3).
+- 🔄 **Sprint 5 – Productivity Core** · **v0.6.0-dev – Fudge 🍫** (in Arbeit) —
+  Stopwatch/Countdown/Pomodoro im neuen Productivity-Screen (BtnB kurz =
+  start/pause, halten = reset/Modus), Settings (Sound on/off), dezente
+  Timer-Töne, Navigations-Hinweise auf allen Widget-Screens.
 
 > **MVP-Regel:** Kein Feature wird umgesetzt, bevor Display, Touch, WLAN und
 > eine einfache Charlie-Gesichtsanzeige stabil funktionieren.
