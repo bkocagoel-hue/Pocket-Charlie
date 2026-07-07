@@ -7,7 +7,7 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [Unreleased] – v0.6.0-dev – Fudge 🍫 · Sprint 5: Productivity Core
+## [0.6.0] – 2026-07-07 – Fudge 🍫 · Sprint 5: Productivity Core
 
 ### Added
 - **Navigations-Hinweise** auf allen Widget-Screens: Punktreihe (aktueller
@@ -25,7 +25,13 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Changed
 - Screen-Reihenfolge: Face → Clock → Mood → Online → **Productivity** →
-  **Settings** → Info. Firmware-Version auf `0.6.0-dev` (Codename `Fudge`).
+  **Settings** → Info. Firmware-Version auf `0.6.0` (Codename `Fudge`).
+
+### Verified
+- Voller Fudge-Hardware-Durchlauf bestanden (M5Stack CoreS3, 2026-07-07):
+  Boot/Info, Navigation, NavBar, BtnB kurz/halten, Stopwatch, Countdown,
+  Pomodoro, Sound on/off, Emotionen/Sprüche, Touch, Sleep/Wake, Online
+  health/thought — alle bestätigt, kein Freeze/Reboot/Flackern.
 
 ---
 
@@ -180,7 +186,8 @@ Erster Meilenstein: lauffähige Firmware auf echter Hardware.
 
 ---
 
-[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.3.0...v0.5.0
 [0.3.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/bkocagoel-hue/Pocket-Charlie/compare/v0.1.0...v0.2.0
