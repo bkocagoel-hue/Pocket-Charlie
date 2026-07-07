@@ -10,6 +10,45 @@ namespace pc {
 namespace {
 // Dunkles Grau fuer Nav-Hinweise: sichtbar, aber bewusst leiser als der Inhalt.
 constexpr std::uint16_t kColorDim = 0x7BEF;
+// Luft zum Bildschirmrand, damit Text nie ganz an der Kante klebt.
+constexpr std::int32_t kSideMargin = 6;
+
+// Kuerzt "text" bei der AKTUELL gesetzten Textgroesse schrittweise und
+// haengt "..." an, bis es in maxWidth passt (M5.Display.textWidth()).
+// Auffangnetz fuer den Fall, dass selbst die kleinste zulaessige Groesse
+// nicht reicht - kein Crash, kein Ueberlauf, nur ein kuerzerer Text.
+void truncateWithEllipsis(const char* text, std::int32_t maxWidth, char* out,
+                          std::size_t outSize) {
+  std::size_t len = std::strlen(text);
+  if (len >= outSize) len = outSize - 1;
+  while (len > 0) {
+    std::snprintf(out, outSize, "%.*s...", static_cast<int>(len), text);
+    if (M5.Display.textWidth(out) <= maxWidth) return;
+    --len;
+  }
+  std::snprintf(out, outSize, "...");
+}
+
+// Waehlt die groesste Textgroesse aus {4, 3, 2}, die "text" innerhalb von
+// maxWidth Pixel darstellt (echte Pixelbreite statt Zeichenanzahl, da die
+// Schrift proportional ist). Passt selbst Groesse 2 nicht, wird hart
+// gekuerzt (truncateWithEllipsis). Schreibt das darzustellende Ergebnis
+// nach out/outSize, setzt die gewaehlte Groesse direkt auf M5.Display und
+// gibt sie zurueck.
+std::uint8_t fitText(const char* text, std::int32_t maxWidth, char* out,
+                     std::size_t outSize) {
+  static constexpr std::uint8_t kSizes[] = {4, 3, 2};
+  for (std::uint8_t size : kSizes) {
+    M5.Display.setTextSize(size);
+    if (M5.Display.textWidth(text) <= maxWidth) {
+      std::snprintf(out, outSize, "%s", text);
+      return size;
+    }
+  }
+  M5.Display.setTextSize(2);
+  truncateWithEllipsis(text, maxWidth, out, outSize);
+  return 2;
+}
 }  // namespace
 
 void Display::begin() {
@@ -52,6 +91,7 @@ void Display::showScreen(const char* title, const char* mainText,
   clear();
   const int32_t cx = M5.Display.width() / 2;
   const int32_t cy = M5.Display.height() / 2;
+  const int32_t maxTextWidth = M5.Display.width() - 2 * kSideMargin;
 
   // Titel klein oben, in Charlies violettem Akzent.
   M5.Display.setTextDatum(top_center);
@@ -62,19 +102,29 @@ void Display::showScreen(const char* title, const char* mainText,
   // dezente violette Akzentlinie
   M5.Display.fillRect(cx - 42, 60, 84, 3, config::kColorEye);
 
-  // Hauptinfo gross, zentriert, weiss. Laengere Texte (z. B. Online-Thought)
-  // automatisch kleiner, damit nichts abgeschnitten wird: Size 4 fasst ~13
-  // Zeichen (320 px / 24 px), Size 2 fasst ~26 Zeichen.
+  // Hauptinfo gross, zentriert, weiss. Groesse richtet sich nach der
+  // tatsaechlichen Pixelbreite (nicht nur Zeichenanzahl), damit z. B. lange
+  // Online-Thoughts nie ueber den Rand laufen; reicht selbst Groesse 2
+  // nicht, wird hart gekuerzt ("...").
+  char fittedMain[32];
+  const std::uint8_t mainSize =
+      fitText(mainText, maxTextWidth, fittedMain, sizeof(fittedMain));
   M5.Display.setTextDatum(middle_center);
   M5.Display.setTextColor(config::kColorText, config::kColorBackground);
-  M5.Display.setTextSize(std::strlen(mainText) > 13 ? 2 : 4);
-  M5.Display.drawString(mainText, cx, cy + 4);
+  M5.Display.setTextSize(mainSize);
+  M5.Display.drawString(fittedMain, cx, cy + 4);
 
-  // optionale Sub-Zeile darunter, klein.
+  // optionale Sub-Zeile darunter, klein - gegen Ueberlauf abgesichert.
   if (sub != nullptr && sub[0] != '\0') {
     M5.Display.setTextDatum(top_center);
     M5.Display.setTextSize(2);
-    M5.Display.drawString(sub, cx, cy + 42);
+    char fittedSub[32];
+    const char* subToShow = sub;
+    if (M5.Display.textWidth(sub) > maxTextWidth) {
+      truncateWithEllipsis(sub, maxTextWidth, fittedSub, sizeof(fittedSub));
+      subToShow = fittedSub;
+    }
+    M5.Display.drawString(subToShow, cx, cy + 42);
   }
 }
 
