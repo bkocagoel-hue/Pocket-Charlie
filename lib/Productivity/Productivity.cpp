@@ -49,8 +49,16 @@ std::uint32_t Productivity::elapsedMs() const {
 
 void Productivity::update(std::uint32_t nowMs) {
   nowMs_ = nowMs;
-  // Ziel-Erkennung (Countdown/Pomodoro) folgt in den naechsten Einheiten;
-  // die Stoppuhr laeuft frei und braucht hier nichts.
+  if (status_ != ProdStatus::Running) return;
+  const std::uint32_t t = targetMs();
+  if (t == 0 || elapsedMs() < t) return;  // Stoppuhr frei / Ziel nicht erreicht
+
+  if (mode_ == ProdMode::Countdown) {
+    accumMs_ = t;  // exakt bei 00:00 einfrieren (nie negativ)
+    status_ = ProdStatus::Done;
+    event_ = ProdEvent::CountdownDone;
+  }
+  // Pomodoro-Phasenwechsel folgt in Einheit 5.
 }
 
 void Productivity::primaryAction(std::uint32_t nowMs) {
@@ -80,8 +88,12 @@ void Productivity::primaryAction(std::uint32_t nowMs) {
 void Productivity::secondaryAction(std::uint32_t nowMs) {
   nowMs_ = nowMs;
   if (status_ == ProdStatus::Ready) {
-    // Nichts laeuft: Halten = Moduswechsel (folgt ab Einheit 4; die Stoppuhr
-    // ist bis dahin der einzige Modus, der Wechsel bleibt hier wirkungslos).
+    // Nichts laeuft: Halten wechselt den Modus - so bleibt BtnA/BtnC reine
+    // Screen-Navigation und Halten kollidiert nie mit einem Reset.
+    mode_ = static_cast<ProdMode>((static_cast<int>(mode_) + 1) % 3);
+    resetTimer();
+    session_ = 1;
+    event_ = ProdEvent::ModeChanged;
     return;
   }
   resetTimer();

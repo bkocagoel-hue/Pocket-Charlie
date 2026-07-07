@@ -184,7 +184,10 @@ void App::loop() {
       case ProdEvent::Resumed:     persona_.poke(Emotion::Curious, 1500);    break;
       case ProdEvent::Reset:       persona_.poke(Emotion::Confused, 1500);   break;
       case ProdEvent::ModeChanged: persona_.poke(Emotion::Curious, 1500);    break;
-      default: break;  // Paused: ruhig (kein Poke); Done-Events folgen E4/E5
+      case ProdEvent::CountdownDone:
+        persona_.poke(Emotion::Happy, 2500);  // Timer gelandet
+        break;
+      default: break;  // Paused: ruhig (kein Poke); Pomodoro-Events folgen E5
     }
   }
 
