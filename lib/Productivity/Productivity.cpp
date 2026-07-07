@@ -57,8 +57,22 @@ void Productivity::update(std::uint32_t nowMs) {
     accumMs_ = t;  // exakt bei 00:00 einfrieren (nie negativ)
     status_ = ProdStatus::Done;
     event_ = ProdEvent::CountdownDone;
+  } else if (mode_ == ProdMode::Pomodoro) {
+    if (!inBreak_) {
+      // Fokus geschafft -> Break startet automatisch (ruhig, kein Nerven).
+      inBreak_ = true;
+      accumMs_ = 0;
+      runStartMs_ = nowMs;
+      event_ = ProdEvent::FocusDone;
+    } else {
+      // Break vorbei -> Durchgang geschafft; naechster Fokus bewusst per BtnB.
+      ++session_;
+      inBreak_ = false;
+      accumMs_ = 0;
+      status_ = ProdStatus::Done;
+      event_ = ProdEvent::BreakDone;
+    }
   }
-  // Pomodoro-Phasenwechsel folgt in Einheit 5.
 }
 
 void Productivity::primaryAction(std::uint32_t nowMs) {
