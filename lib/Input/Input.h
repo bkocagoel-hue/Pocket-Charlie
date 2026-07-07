@@ -40,6 +40,12 @@ class Input {
   bool btnCPressed() const   { return btnC_; }
   bool btnPwrPressed() const { return btnPwr_; }
 
+  // --- BtnB kurz vs. lang (Sprint 5, Productivity-Bedienung) ---
+  // Clicked = kurz gedrueckt und losgelassen; Held = Halte-Schwelle erreicht
+  // (feuert genau einmal). Ein Halten loest KEIN Clicked aus.
+  bool btnBClicked() const { return btnBClicked_; }
+  bool btnBHeld() const    { return btnBHeld_; }
+
  private:
   bool isTouched_   = false;
   bool wasPressed_  = false;
@@ -51,6 +57,8 @@ class Input {
   bool btnB_   = false;
   bool btnC_   = false;
   bool btnPwr_ = false;
+  bool btnBClicked_ = false;
+  bool btnBHeld_    = false;
 };
 
 }  // namespace pc

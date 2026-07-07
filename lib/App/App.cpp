@@ -137,7 +137,17 @@ void App::loop() {
     Serial.printf("[Menu] screen: %s\n", menu_.name());
   }
   if (menu_.current() == Screen::Productivity) {
-    // Sprint 5: BtnB-Bedienung (Klick vs. Halten) folgt mit der Stopwatch.
+    // Sprint 5: BtnB kurz = start/pause/weiter, BtnB halten = reset/modus.
+    // Bewusst Klick (Loslassen) statt Druck-Flanke, damit Halten nicht
+    // zusaetzlich eine Kurz-Aktion ausloest.
+    if (input_.btnBClicked()) {
+      prod_.primaryAction(now);
+      screenRedraw_ = true;
+    }
+    if (input_.btnBHeld()) {
+      prod_.secondaryAction(now);
+      screenRedraw_ = true;
+    }
   } else if (interaction_.btnB()) {
     if (menu_.current() == Screen::Face) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
@@ -161,6 +171,20 @@ void App::loop() {
       flashActive_ = true;  // kurze "ok"-Rueckmeldung
       screenFlashUntil_ = now + 1000;
       screenRedraw_ = true;
+    }
+  }
+
+  // Sprint 5: Productivity-Ereignisse in kurze emotionale Momente uebersetzen
+  // (nach der Bedienung abholen, damit Button-Aktionen sofort wirken).
+  const ProdEvent pe = prod_.takeEvent();
+  if (pe != ProdEvent::None) {
+    if (menu_.current() == Screen::Productivity) screenRedraw_ = true;
+    switch (pe) {
+      case ProdEvent::Started:     persona_.poke(Emotion::Thoughtful, 2500); break;
+      case ProdEvent::Resumed:     persona_.poke(Emotion::Curious, 1500);    break;
+      case ProdEvent::Reset:       persona_.poke(Emotion::Confused, 1500);   break;
+      case ProdEvent::ModeChanged: persona_.poke(Emotion::Curious, 1500);    break;
+      default: break;  // Paused: ruhig (kein Poke); Done-Events folgen E4/E5
     }
   }
 

@@ -25,6 +25,9 @@ void Input::update() {
   btnA_   = M5.BtnA.wasPressed();
   btnB_   = M5.BtnB.wasPressed();
   btnC_   = M5.BtnC.wasPressed();
+  // BtnB zusaetzlich als Klick (beim Loslassen) vs. Halten (Sprint 5).
+  btnBClicked_ = M5.BtnB.wasClicked();
+  btnBHeld_    = M5.BtnB.wasHold();
   // Power-Button nur als kurzen Klick werten (langes Halten = Hardware-Off).
   btnPwr_ = M5.BtnPWR.wasClicked();
 }

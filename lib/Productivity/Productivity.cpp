@@ -49,17 +49,44 @@ std::uint32_t Productivity::elapsedMs() const {
 
 void Productivity::update(std::uint32_t nowMs) {
   nowMs_ = nowMs;
-  // Timerlogik folgt in den naechsten Einheiten (Stopwatch/Countdown/Pomodoro).
+  // Ziel-Erkennung (Countdown/Pomodoro) folgt in den naechsten Einheiten;
+  // die Stoppuhr laeuft frei und braucht hier nichts.
 }
 
 void Productivity::primaryAction(std::uint32_t nowMs) {
   nowMs_ = nowMs;
-  // Folgt mit der Stopwatch (Einheit 3).
+  switch (status_) {
+    case ProdStatus::Ready:
+      runStartMs_ = nowMs;
+      status_ = ProdStatus::Running;
+      event_ = ProdEvent::Started;
+      break;
+    case ProdStatus::Running:
+      accumMs_ = elapsedMs();  // Zeit einfrieren
+      status_ = ProdStatus::Paused;
+      event_ = ProdEvent::Paused;
+      break;
+    case ProdStatus::Paused:
+      runStartMs_ = nowMs;  // ab hier laeuft es weiter (accum bleibt)
+      status_ = ProdStatus::Running;
+      event_ = ProdEvent::Resumed;
+      break;
+    case ProdStatus::Done:
+      resetTimer();  // bestaetigen -> bereit fuer die naechste Runde
+      break;
+  }
 }
 
 void Productivity::secondaryAction(std::uint32_t nowMs) {
   nowMs_ = nowMs;
-  // Folgt mit der Stopwatch (Einheit 3).
+  if (status_ == ProdStatus::Ready) {
+    // Nichts laeuft: Halten = Moduswechsel (folgt ab Einheit 4; die Stoppuhr
+    // ist bis dahin der einzige Modus, der Wechsel bleibt hier wirkungslos).
+    return;
+  }
+  resetTimer();
+  session_ = 1;
+  event_ = ProdEvent::Reset;
 }
 
 const char* Productivity::modeName() const {
