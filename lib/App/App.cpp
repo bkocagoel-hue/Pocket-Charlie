@@ -47,6 +47,7 @@ void App::setup() {
                      // Charlie unveraendert lokal (local-first).
   online_.begin();   // Sprint 4 E3: Bridge-Ping-Task (Core 0); ohne Bridge-URL
                      // deaktiviert. Pings nur manuell via BtnB.
+  prod_.begin();     // Sprint 5: Fokus-Werkzeuge (rein lokal)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -121,6 +122,9 @@ void App::loop() {
   if (interaction_.btnC()) Serial.println("[Intent] BtnC");
   if (interaction_.pwr())  Serial.println("[Intent] PWR");
 
+  // Sprint 5: Productivity-Zeitlogik fortschreiben (non-blocking).
+  prod_.update(now);
+
   // Sprint 3: Button-Menuefuehrung. BtnA/BtnC navigieren, BtnB = Screen-Aktion.
   if (interaction_.btnA()) {
     menu_.prev();
@@ -132,7 +136,9 @@ void App::loop() {
     screenRedraw_ = true;
     Serial.printf("[Menu] screen: %s\n", menu_.name());
   }
-  if (interaction_.btnB()) {
+  if (menu_.current() == Screen::Productivity) {
+    // Sprint 5: BtnB-Bedienung (Klick vs. Halten) folgt mit der Stopwatch.
+  } else if (interaction_.btnB()) {
     if (menu_.current() == Screen::Face) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich
     } else if (menu_.current() == Screen::Online && network_.online()) {
@@ -235,6 +241,14 @@ void App::renderScreen(std::uint32_t nowMs) {
       screenRedraw_ = true;
     }
   }
+  // Productivity aktualisiert sich sekuendlich (laufende Timer).
+  if (s == Screen::Productivity) {
+    const std::uint32_t sec = prod_.displaySeconds();
+    if (sec != lastProdSec_) {
+      lastProdSec_ = sec;
+      screenRedraw_ = true;
+    }
+  }
   // Online-Screen aktualisiert sich bei WiFi-/Bridge-/Thought-Statuswechsel
   // oder neuem Thought-Text (alles kombiniert in einem Vergleichswert).
   if (s == Screen::Online) {
@@ -261,11 +275,12 @@ void App::renderScreen(std::uint32_t nowMs) {
 
   // Je Screen genau ein Text-Widget (Face wird nicht hier gezeichnet).
   switch (s) {
-    case Screen::Clock:  renderClockWidget(nowMs); break;
-    case Screen::Mood:   renderMoodWidget();       break;
-    case Screen::Online: renderOnlineWidget();     break;
-    case Screen::Info:   renderInfoWidget();       break;
-    default:             break;
+    case Screen::Clock:        renderClockWidget(nowMs);   break;
+    case Screen::Mood:         renderMoodWidget();         break;
+    case Screen::Online:       renderOnlineWidget();       break;
+    case Screen::Productivity: renderProductivityWidget(); break;
+    case Screen::Info:         renderInfoWidget();         break;
+    default:                   break;
   }
 }
 
@@ -334,6 +349,17 @@ void App::renderOnlineWidget() {
 
   display_.showScreen(title, mainText, flashActive_ ? "ok" : sub);
   display_.drawNavBar(menu_.index(), Menu::count(), action);
+}
+
+void App::renderProductivityWidget() {
+  // Ruhig und klar: Modus als Titel, Zeit gross, Status klein darunter,
+  // Bedien-Hinweise in der NavBar - keine Smartwatch-Ueberladung.
+  char timeBuf[12];
+  char sub[16];
+  prod_.timeText(timeBuf, sizeof(timeBuf));
+  prod_.subText(sub, sizeof(sub));
+  display_.showScreen(prod_.modeName(), timeBuf, sub);
+  display_.drawNavBar(menu_.index(), Menu::count(), prod_.actionHint());
 }
 
 void App::renderInfoWidget() {

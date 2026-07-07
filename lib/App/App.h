@@ -21,6 +21,7 @@
 #include "NetworkManager.h"
 #include "OnlineClient.h"
 #include "Persona.h"
+#include "Productivity.h"
 
 namespace pc {
 
@@ -38,6 +39,7 @@ class App {
   void renderClockWidget(std::uint32_t nowMs);
   void renderMoodWidget();
   void renderOnlineWidget();
+  void renderProductivityWidget();
   void renderInfoWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
@@ -47,6 +49,7 @@ class App {
   Persona persona_;  // Stimmungs-/Emotionszustand (Sprint 2)
   NetworkManager network_;  // Sprint 4: optionales WLAN (local-first)
   OnlineClient   online_;   // Sprint 4: Bridge-Ping (Task auf Core 0)
+  Productivity   prod_;     // Sprint 5: Stopwatch/Countdown/Pomodoro
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;
@@ -68,6 +71,9 @@ class App {
   // Sprint 4: Online-Screen zeichnet neu, wenn sich WiFi- ODER Bridge-Status
   // aendert (beide kombiniert in einem Wert, siehe renderScreen()).
   int lastNetState_ = -1;
+
+  // Sprint 5: Productivity-Screen zeichnet sekuendlich neu (wie Clock).
+  std::uint32_t lastProdSec_ = 0;
 
   // Sprint 4 E4B: Online-Ereignisse -> kleine emotionale Momente.
   // Flanken-Erkennung fuer Bridge-/Thought-Ausgang + Fehlerzaehler (Sad).
