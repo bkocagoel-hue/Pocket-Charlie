@@ -27,8 +27,8 @@ Schnelltest im Browser auf dem Laptop:
 
 | Endpunkt | Antwort |
 |---|---|
-| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.4.1", "provider": "mock", "local_ai_configured": true}` |
-| `GET /thought` | `{"text": "still here."}` — Text kommt vom aktiven `ThoughtProvider`, Contract bleibt immer `{"text": "..."}` |
+| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.4.2", "provider": "mock", "local_ai_configured": true}` |
+| `GET /thought` | `{"text": "still here.", "source": "mock"}` — `text` ist Pflichtfeld und bleibt immer da; `source` (`"mock"`/`"ollama"`) zeigt die tatsächlich genutzte Quelle, auch wenn Ollama konfiguriert war, der Request aber auf Mock zurückgefallen ist |
 
 Unbekannte Pfade liefern `404`.
 

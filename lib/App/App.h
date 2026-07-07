@@ -71,6 +71,10 @@ class App {
   std::uint32_t screenFlashUntil_ = 0;
   char uptimeBuf_[12] = {0};
 
+  // Sprint 6, E3: "provider ai:status" fuer den Online-Screen (z. B.
+  // "ollama ai:on"), aus OnlineClient::providerName()/aiStatusName() gebaut.
+  char aiSubBuf_[24] = {0};
+
   // Sprint 4: Online-Screen zeichnet neu, wenn sich WiFi- ODER Bridge-Status
   // aendert (beide kombiniert in einem Wert, siehe renderScreen()).
   int lastNetState_ = -1;

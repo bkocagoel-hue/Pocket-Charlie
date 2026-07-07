@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <cstdio>
+#include <cstring>
 
 #include "PcConfig.h"
 #include "Phrases.h"
@@ -384,6 +385,12 @@ void App::renderOnlineWidget() {
       default:                 break;  // Connecting: nur "trying"
     }
   } else {
+    // Sprint 6, E3: knappe Provider-/AI-Sichtbarkeit, z. B. "ollama ai:on".
+    // Neutrale Defaults ("unknown"/"fallback"), solange nichts Genaueres
+    // bekannt ist - siehe OnlineClient::providerName()/aiStatusName().
+    std::snprintf(aiSubBuf_, sizeof(aiSubBuf_), "%s ai:%s",
+                  online_.providerName(), online_.aiStatusName());
+
     const ThoughtState ts = online_.thoughtState();
     if (ts == ThoughtState::Fetching) {
       title = "online";
@@ -394,6 +401,21 @@ void App::renderOnlineWidget() {
     } else if (ts == ThoughtState::Ok) {
       title = "online";
       mainText = online_.thoughtText();
+      // Sprint 6, E5: hier zaehlt die TATSAECHLICHE Quelle dieses einen
+      // Thoughts (kann bei bridge-seitigem Fallback vom Konfigurationsstatus
+      // abweichen), nicht der generelle "provider ai:status" von /health.
+      // Aeltere Bridge ohne "source"-Feld -> weiterhin Konfigurationsstatus.
+      const char* thoughtSrc = online_.thoughtSourceName();
+      if (std::strcmp(thoughtSrc, "unknown") == 0) {
+        // aiSubBuf_ enthaelt bereits den generellen Status (oben berechnet).
+      } else if (std::strcmp(thoughtSrc, "ollama") == 0) {
+        std::snprintf(aiSubBuf_, sizeof(aiSubBuf_), "ollama ai:on");
+      } else if (std::strcmp(online_.providerName(), "ollama") == 0) {
+        std::snprintf(aiSubBuf_, sizeof(aiSubBuf_), "mock fallback");
+      } else {
+        std::snprintf(aiSubBuf_, sizeof(aiSubBuf_), "mock ai:off");
+      }
+      sub = aiSubBuf_;
       action = "B: again";
     } else if (ts == ThoughtState::Failed) {
       // Charmanter Fallback statt Fehlermeldung; BtnB pingt danach /health.
@@ -404,6 +426,7 @@ void App::renderOnlineWidget() {
     } else {
       title = "bridge";
       mainText = online_.stateName();
+      sub = aiSubBuf_;
       switch (online_.state()) {
         case BridgeState::Idle: action = "B: ping";    break;
         case BridgeState::Ok:   action = "B: thought"; break;

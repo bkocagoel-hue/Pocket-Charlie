@@ -26,7 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST = "0.0.0.0"  # im ganzen Heimnetz erreichbar (M5Stack nutzt die Laptop-IP)
 PORT = 8787
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 DEFAULT_PROVIDER = "mock"
 
 # Displaytauglich halten (CoreS3-Screen, Firmware-Puffer ist 26 Zeichen).
@@ -70,12 +70,18 @@ THOUGHTS = [
 
 
 class ThoughtProvider:
-    """Liefert den Text fuer GET /thought. Austauschbar, /thought-Contract
-    (`{"text": "..."}`) bleibt fuer die Firmware in jedem Fall stabil."""
+    """Liefert Text + tatsaechliche Quelle fuer GET /thought. Austauschbar,
+    /thought-Contract (`{"text": "..."}`) bleibt fuer die Firmware in jedem
+    Fall stabil; `source` ist ein zusaetzliches, optionales Feld.
+
+    Rueckgabe als Tupel (text, source) statt eines gemeinsamen mutable
+    Zustands auf dem Provider-Objekt: die Bridge ist ein ThreadingHTTPServer,
+    parallele /thought-Requests duerfen sich die Quelle nicht gegenseitig
+    ueberschreiben (Race Condition)."""
 
     name = "base"
 
-    def get_thought(self) -> str:
+    def get_thought(self) -> tuple:
         raise NotImplementedError
 
 
@@ -84,8 +90,8 @@ class MockThoughtProvider(ThoughtProvider):
 
     name = "mock"
 
-    def get_thought(self) -> str:
-        return random.choice(THOUGHTS)
+    def get_thought(self) -> tuple:
+        return random.choice(THOUGHTS), self.name
 
 
 def _clean_for_display(text: str) -> str:
@@ -112,7 +118,7 @@ class OllamaThoughtProvider(ThoughtProvider):
     def is_configured(self) -> bool:
         return bool(self._url) and bool(self._model)
 
-    def get_thought(self) -> str:
+    def get_thought(self) -> tuple:
         if not self.is_configured():
             print("[bridge] ollama nicht konfiguriert (URL/Modell leer), "
                   "falle auf mock zurueck.")
@@ -130,7 +136,7 @@ class OllamaThoughtProvider(ThoughtProvider):
             print("[bridge] ollama lieferte leere Antwort, falle auf mock "
                   "zurueck.")
             return self._fallback.get_thought()
-        return text
+        return text, self.name
 
     def _ask_ollama(self) -> str:
         body = json.dumps({
@@ -181,7 +187,8 @@ class Handler(BaseHTTPRequestHandler):
                  "version": VERSION, "provider": ACTIVE_PROVIDER.name,
                  "local_ai_configured": PROVIDERS["ollama"].is_configured()})
         elif self.path == "/thought":
-            self._send_json({"text": ACTIVE_PROVIDER.get_thought()})
+            text, source = ACTIVE_PROVIDER.get_thought()
+            self._send_json({"text": text, "source": source})
         else:
             self._send_json({"ok": False, "error": "unknown path"}, status=404)
 

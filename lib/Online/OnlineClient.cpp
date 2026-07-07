@@ -25,7 +25,11 @@ constexpr const char* kBridgeUrl = "";
 
 namespace pc {
 namespace {
-constexpr std::uint32_t kHttpTimeoutMs = 2000;  // kurz: kein UI-Gefuehl von Haengen
+// /health bleibt kurz (keine UI-Wartewirkung); /thought braucht bei aktivem
+// Local-AI-Provider realistisch 1-3s Ollama-Inferenz + HTTP/JSON-Overhead,
+// deshalb eigener, groesserer Timeout (Sprint 6, E4).
+constexpr std::uint32_t kHealthHttpTimeoutMs  = 2000;
+constexpr std::uint32_t kThoughtHttpTimeoutMs = 7000;
 constexpr std::uint32_t kTaskStackBytes = 8192;
 constexpr UBaseType_t   kTaskPriority   = 1;    // niedrig; Rendering hat Vorrang
 constexpr BaseType_t    kTaskCore       = 0;    // Arduino-Loop laeuft auf Core 1
@@ -34,23 +38,43 @@ bool hasBridgeUrl() {
   return secrets::kBridgeUrl != nullptr && secrets::kBridgeUrl[0] != '\0';
 }
 
-// Minimales "JSON-Parsing": extrahiert den Wert der "text"-Property.
-// Bewusst KEINE JSON-Bibliothek - die Bridge gehoert uns, das Format ist
-// stabil und die Saetze enthalten keine Escapes/Anfuehrungszeichen.
-bool extractText(const char* json, char* out, std::size_t outSize) {
-  const char* p = strstr(json, "\"text\"");
+// Minimales "JSON-Parsing": extrahiert den String-Wert eines Feldes, z. B.
+// "text" oder "provider". Bewusst KEINE JSON-Bibliothek - die Bridge gehoert
+// uns, das Format ist stabil und die Werte enthalten keine Escapes/
+// Anfuehrungszeichen. Fehlt das Feld, liefert der Aufrufer seinen Default.
+bool extractField(const char* json, const char* key, char* out,
+                  std::size_t outSize) {
+  char needle[32];
+  std::snprintf(needle, sizeof(needle), "\"%s\"", key);
+  const char* p = strstr(json, needle);
   if (p == nullptr) return false;
-  p = strchr(p + 6, ':');
+  p = strchr(p + std::strlen(needle), ':');
   if (p == nullptr) return false;
   p = strchr(p, '"');
   if (p == nullptr) return false;
   ++p;
   std::size_t i = 0;
   while (*p != '\0' && *p != '"' && i + 1 < outSize) {
-    out[i++] = *p++;  // laengere Texte werden hart gekuerzt (kein Crash)
+    out[i++] = *p++;  // laengere Werte werden hart gekuerzt (kein Crash)
   }
   out[i] = '\0';
   return i > 0;
+}
+
+// Extrahiert einen Bool-Wert (true/false, unquotiert). Fehlt das Feld oder
+// ist es nicht eindeutig, liefert es defensiv den uebergebenen Default.
+bool extractBoolField(const char* json, const char* key, bool fallback) {
+  char needle[32];
+  std::snprintf(needle, sizeof(needle), "\"%s\"", key);
+  const char* p = strstr(json, needle);
+  if (p == nullptr) return fallback;
+  p = strchr(p + std::strlen(needle), ':');
+  if (p == nullptr) return fallback;
+  ++p;
+  while (*p == ' ') ++p;
+  if (std::strncmp(p, "true", 4) == 0) return true;
+  if (std::strncmp(p, "false", 5) == 0) return false;
+  return fallback;
 }
 }  // namespace
 
@@ -106,6 +130,8 @@ void OnlineClient::reset() {
   if (ts == ThoughtState::Ok || ts == ThoughtState::Failed) {
     setThoughtState(ThoughtState::None);
   }
+  // Ohne WLAN ist auch der zuletzt bekannte Provider-Stand nicht mehr ehrlich.
+  providerKnown_ = false;
 }
 
 void OnlineClient::taskEntry(void* self) {
@@ -129,21 +155,35 @@ void OnlineClient::doPing() {
 
   bool ok = false;
   HTTPClient http;
-  http.setConnectTimeout(kHttpTimeoutMs);
-  http.setTimeout(kHttpTimeoutMs);
+  http.setConnectTimeout(kHealthHttpTimeoutMs);
+  http.setTimeout(kHealthHttpTimeoutMs);
   if (http.begin(url)) {
     const int code = http.GET();
     ok = (code == HTTP_CODE_OK);
     if (ok) {
-      Serial.println("[Bridge] /health -> ok (200)");
+      // Provider-Sichtbarkeit (Sprint 6, E3/E4): /health ist die EINZIGE
+      // Quelle fuer provider_/localAiConfigured_/providerKnown_ - doThought()
+      // fasst diese drei bewusst nie an (siehe providerKnown_ in .h).
+      const String payload = http.getString();
+      if (!extractField(payload.c_str(), "provider", provider_,
+                        sizeof(provider_))) {
+        std::strcpy(provider_, "unknown");
+      }
+      localAiConfigured_ =
+          extractBoolField(payload.c_str(), "local_ai_configured", false);
+      providerKnown_ = true;
+      Serial.printf("[Bridge] /health -> ok (200, provider=%s, local_ai=%s)\n",
+                    provider_, localAiConfigured_ ? "yes" : "no");
     } else {
       // code < 0 = Verbindungsfehler/Timeout, sonst HTTP-Fehlercode.
+      providerKnown_ = false;
       Serial.printf("[Bridge] /health -> down (%d: %s)\n", code,
                     code < 0 ? HTTPClient::errorToString(code).c_str()
                              : "HTTP-Fehler");
     }
     http.end();
   } else {
+    providerKnown_ = false;
     Serial.println("[Bridge] /health -> down (URL ungueltig).");
   }
 
@@ -156,16 +196,24 @@ void OnlineClient::doThought() {
 
   bool ok = false;
   HTTPClient http;
-  http.setConnectTimeout(kHttpTimeoutMs);
-  http.setTimeout(kHttpTimeoutMs);
+  http.setConnectTimeout(kThoughtHttpTimeoutMs);
+  http.setTimeout(kThoughtHttpTimeoutMs);
   if (http.begin(url)) {
     const int code = http.GET();
     if (code == HTTP_CODE_OK) {
       // Antwort ist winzig (< 100 B); Text extrahieren und hart kuerzen.
       const String payload = http.getString();
-      ok = extractText(payload.c_str(), thought_, sizeof(thought_));
+      ok = extractField(payload.c_str(), "text", thought_, sizeof(thought_));
+      // "source" ist optional (Sprint 6, E5): aeltere Bridge ohne dieses Feld
+      // -> "unknown", damit Charlie nie behauptet, ein Fallback-Text sei
+      // von Ollama gekommen.
+      if (!extractField(payload.c_str(), "source", thoughtSource_,
+                        sizeof(thoughtSource_))) {
+        std::strcpy(thoughtSource_, "unknown");
+      }
       if (ok) {
-        Serial.printf("[Bridge] /thought -> ok: \"%s\"\n", thought_);
+        Serial.printf("[Bridge] /thought -> ok: \"%s\" (source=%s)\n",
+                      thought_, thoughtSource_);
       } else {
         Serial.println("[Bridge] /thought -> Antwort ohne \"text\".");
       }
@@ -199,6 +247,22 @@ const char* OnlineClient::stateName() const {
     case BridgeState::Down:     return "down";
     default:                    return "?";
   }
+}
+
+const char* OnlineClient::providerName() const {
+  // Gategt auf providerKnown_ (nicht auf state()!): ein fehlgeschlagener
+  // /thought-Request setzt state() zwar auf Down, darf den zuletzt von
+  // /health bekannten Provider aber nicht verwerfen (Sprint 6, E4).
+  if (!providerKnown_) return "unknown";
+  return provider_;
+}
+
+const char* OnlineClient::aiStatusName() const {
+  if (!providerKnown_) return "fallback";
+  if (std::strcmp(provider_, "ollama") == 0) {
+    return localAiConfigured_ ? "on" : "fallback";
+  }
+  return "off";  // "mock" oder unbekannter Provider-Name -> kein Local AI aktiv
 }
 
 }  // namespace pc

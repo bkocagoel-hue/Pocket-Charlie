@@ -56,6 +56,20 @@ class OnlineClient {
   std::uint8_t thoughtSeq() const {
     return thoughtSeq_.load(std::memory_order_relaxed);
   }
+  // Tatsaechliche Quelle DIESES Thoughts (Sprint 6, E5): "mock"/"ollama" aus
+  // dem optionalen "source"-Feld von /thought, sonst "unknown" (aeltere
+  // Bridge ohne dieses Feld). Nur gueltig bei thoughtState() == Ok, gleiche
+  // Regel wie thoughtText().
+  const char* thoughtSourceName() const { return thoughtSource_; }
+
+  // --- Provider Visibility (Sprint 6, E3/E4) ---
+  // Aus /health mitgelesen (best effort, kein hartes JSON-Schema); einzige
+  // Quelle ist ein erfolgreicher /health-Ping (doPing()). Ein fehlgeschlagener
+  // /thought-Request veraendert diese Werte nicht. Ohne bekannten Stand oder
+  // wenn die Bridge die Felder gar nicht sendet, liefern beide Getter
+  // neutrale Defaults, nie einen Fehlerzustand.
+  const char* providerName() const;  // "mock" / "ollama" / "unknown"
+  const char* aiStatusName() const;  // "on" / "off" / "fallback"
 
   // Ergebnisse verwerfen (z. B. nach WLAN-Verlust) -> zurueck auf Idle/None.
   void reset();
@@ -82,7 +96,19 @@ class OnlineClient {
   std::atomic<std::uint8_t> thoughtSeq_{0};
   std::atomic<std::uint8_t> kind_{0};  // naechster Request: 0=health, 1=thought
   char thought_[27] = {0};  // max. 26 Zeichen (passt auf den Screen) + NUL
+  char thoughtSource_[8] = "unknown";  // "mock"/"ollama"/"unknown"
   void* task_ = nullptr;    // TaskHandle_t (Header bleibt POD-only)
+
+  // Nur vom Task waehrend doPing() geschrieben; siehe Nebenlaeufigkeits-Regel
+  // oben. Getter gaten auf providerKnown_, daher unproblematisch, auch wenn
+  // hier kurzzeitig ein veralteter Wert steht.
+  char provider_[16] = "unknown";
+  bool localAiConfigured_ = false;
+  // Ausschliesslich von doPing() gesetzt (true bei Erfolg, false bei
+  // Fehlschlag) und von reset(). doThought() fasst dies bewusst NIE an,
+  // damit ein /thought-Timeout den Provider-Status nicht mitreisst
+  // (Sprint 6, E4).
+  bool providerKnown_ = false;
 };
 
 }  // namespace pc
