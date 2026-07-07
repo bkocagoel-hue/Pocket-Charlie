@@ -27,7 +27,7 @@ Schnelltest im Browser auf dem Laptop:
 
 | Endpunkt | Antwort |
 |---|---|
-| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.4.0", "provider": "mock", "local_ai_configured": true}` |
+| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.4.1", "provider": "mock", "local_ai_configured": true}` |
 | `GET /thought` | `{"text": "still here."}` — Text kommt vom aktiven `ThoughtProvider`, Contract bleibt immer `{"text": "..."}` |
 
 Unbekannte Pfade liefern `404`.
@@ -47,6 +47,7 @@ PC_BRIDGE_PROVIDER=ollama python backend/pocket-charlie-bridge/server.py
 | `PC_BRIDGE_PROVIDER` | `mock` | `mock` oder `ollama`; unbekannte Werte fallen mit Log-Hinweis auf `mock` zurück |
 | `PC_OLLAMA_URL` | `http://localhost:11434` | Basis-URL des lokalen Ollama-Servers |
 | `PC_OLLAMA_MODEL` | `llama3.2` | Modellname, muss lokal via `ollama pull` vorhanden sein |
+| `PC_OLLAMA_TIMEOUT` | `10` (Sekunden) | Hartes Timeout für den Ollama-Request; ungültige Werte fallen auf den Default zurück |
 
 `mock` ist und bleibt Default und Fallback. Der `ollama`-Provider läuft komplett
 lokal (kein API-Key, keine Cloud-Pflicht), hat ein hartes Timeout und fällt bei

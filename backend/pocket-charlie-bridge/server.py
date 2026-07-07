@@ -12,7 +12,7 @@
 #  Provider waehlen:  PC_BRIDGE_PROVIDER=mock   python server.py  (Default)
 #                     PC_BRIDGE_PROVIDER=ollama python server.py
 #  Ollama konfigurieren (optional, nur wenn Provider "ollama" genutzt wird):
-#                     PC_OLLAMA_URL, PC_OLLAMA_MODEL
+#                     PC_OLLAMA_URL, PC_OLLAMA_MODEL, PC_OLLAMA_TIMEOUT
 #
 #  Start:   python backend/pocket-charlie-bridge/server.py
 #  (oder:   py backend/pocket-charlie-bridge/server.py)
@@ -26,7 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST = "0.0.0.0"  # im ganzen Heimnetz erreichbar (M5Stack nutzt die Laptop-IP)
 PORT = 8787
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 DEFAULT_PROVIDER = "mock"
 
 # Displaytauglich halten (CoreS3-Screen, Firmware-Puffer ist 26 Zeichen).
@@ -34,7 +34,20 @@ MAX_THOUGHT_CHARS = 26
 
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
 DEFAULT_OLLAMA_MODEL = "llama3.2"
-OLLAMA_TIMEOUT_S = 4.0  # harte Grenze; darf die Bridge nie lange blockieren
+DEFAULT_OLLAMA_TIMEOUT_S = 10.0  # harte Grenze; darf die Bridge nie lange blockieren
+OLLAMA_NUM_PREDICT = 16  # kurze Antworten: schneller + displaytauglich
+
+
+def _parse_timeout(raw, fallback: float) -> float:
+    try:
+        value = float(raw)
+        return value if value > 0 else fallback
+    except (TypeError, ValueError):
+        return fallback
+
+
+OLLAMA_TIMEOUT_S = _parse_timeout(
+    os.environ.get("PC_OLLAMA_TIMEOUT"), DEFAULT_OLLAMA_TIMEOUT_S)
 
 CHARLIE_PERSONA_PROMPT = (
     "You are Charlie, a tiny, calm desktop companion robot. Reply with "
@@ -124,6 +137,7 @@ class OllamaThoughtProvider(ThoughtProvider):
             "model": self._model,
             "prompt": CHARLIE_PERSONA_PROMPT,
             "stream": False,
+            "options": {"num_predict": OLLAMA_NUM_PREDICT},
         }).encode("utf-8")
         req = urllib.request.Request(
             f"{self._url}/api/generate", data=body,
