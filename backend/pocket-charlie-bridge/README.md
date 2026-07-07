@@ -27,21 +27,32 @@ Schnelltest im Browser auf dem Laptop:
 
 | Endpunkt | Antwort |
 |---|---|
-| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.3.0", "provider": "mock"}` |
-| `GET /thought` | `{"text": "still here."}` — Text kommt vom aktiven `ThoughtProvider` (Default: `mock`, lokal/statisch, keine KI, kein API-Key) |
+| `GET /health` | `{"ok": true, "service": "pocket-charlie-bridge", "version": "0.4.0", "provider": "mock", "local_ai_configured": true}` |
+| `GET /thought` | `{"text": "still here."}` — Text kommt vom aktiven `ThoughtProvider`, Contract bleibt immer `{"text": "..."}` |
 
 Unbekannte Pfade liefern `404`.
 
 ## Provider wählen
 
 ```bash
+# Default: lokal/statisch, keine KI, kein Netzwerk
 PC_BRIDGE_PROVIDER=mock python backend/pocket-charlie-bridge/server.py
+
+# Optional: lokales LLM über Ollama (oder kompatiblen HTTP-Endpunkt)
+PC_BRIDGE_PROVIDER=ollama python backend/pocket-charlie-bridge/server.py
 ```
 
-`mock` ist Default und einzig verfügbarer Provider; weitere (z. B. ein
-lokales LLM) kommen als eigene `ThoughtProvider`-Klasse dazu, ohne dass sich
-der `/thought`-Contract für die Firmware ändert. Unbekannte Werte fallen mit
-Log-Hinweis auf `mock` zurück.
+| Env-Variable | Default | Zweck |
+|---|---|---|
+| `PC_BRIDGE_PROVIDER` | `mock` | `mock` oder `ollama`; unbekannte Werte fallen mit Log-Hinweis auf `mock` zurück |
+| `PC_OLLAMA_URL` | `http://localhost:11434` | Basis-URL des lokalen Ollama-Servers |
+| `PC_OLLAMA_MODEL` | `llama3.2` | Modellname, muss lokal via `ollama pull` vorhanden sein |
+
+`mock` ist und bleibt Default und Fallback. Der `ollama`-Provider läuft komplett
+lokal (kein API-Key, keine Cloud-Pflicht), hat ein hartes Timeout und fällt bei
+jedem Fehler oder leerer Antwort automatisch auf `mock` zurück — die Bridge
+crasht dadurch nie, auch wenn Ollama nicht läuft. Der `/thought`-Contract für
+die Firmware ändert sich dabei nicht.
 
 ## Bridge-URL für den M5Stack konfigurieren
 
