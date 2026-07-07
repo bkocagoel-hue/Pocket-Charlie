@@ -41,6 +41,7 @@ class App {
   void renderMoodWidget();
   void renderOnlineWidget();
   void renderProductivityWidget();
+  void renderSettingsWidget();
   void renderInfoWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen

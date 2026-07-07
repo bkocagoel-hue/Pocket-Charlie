@@ -12,7 +12,7 @@
 namespace pc {
 
 enum class Screen : std::uint8_t {
-  Face = 0, Clock, Mood, Online, Productivity, Info
+  Face = 0, Clock, Mood, Online, Productivity, Settings, Info
 };
 
 class Menu {
@@ -37,13 +37,14 @@ class Menu {
       case Screen::Mood:         return "Mood";
       case Screen::Online:       return "Online";
       case Screen::Productivity: return "Productivity";
+      case Screen::Settings:     return "Settings";
       case Screen::Info:         return "Info";
       default:                   return "?";
     }
   }
 
  private:
-  static constexpr int kCount = 6;
+  static constexpr int kCount = 7;
   Screen cur_ = Screen::Face;
 };
 

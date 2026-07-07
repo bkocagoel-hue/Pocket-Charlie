@@ -161,6 +161,11 @@ void App::loop() {
         online_.requestPing();
       }
       screenRedraw_ = true;
+    } else if (menu_.current() == Screen::Settings) {
+      // Sprint 5: BtnB = Sound umschalten; beim Einschalten kurze Hoerprobe.
+      sound_.setEnabled(!sound_.enabled());
+      if (sound_.enabled()) sound_.playTimerDone();
+      screenRedraw_ = true;
     } else {
       if (menu_.current() == Screen::Online) {
         network_.retry();  // WLAN offline: BtnB = Verbindungs-Retry
@@ -316,6 +321,7 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Mood:         renderMoodWidget();         break;
     case Screen::Online:       renderOnlineWidget();       break;
     case Screen::Productivity: renderProductivityWidget(); break;
+    case Screen::Settings:     renderSettingsWidget();     break;
     case Screen::Info:         renderInfoWidget();         break;
     default:                   break;
   }
@@ -397,6 +403,14 @@ void App::renderProductivityWidget() {
   prod_.subText(sub, sizeof(sub));
   display_.showScreen(prod_.modeName(), timeBuf, sub);
   display_.drawNavBar(menu_.index(), Menu::count(), prod_.actionHint());
+}
+
+void App::renderSettingsWidget() {
+  // Bewusst schlicht: eine Einstellung, ein Toggle. Pomodoro 25/5 bleibt
+  // Konstante; Persistenz ist bewusst noch nicht dran (Runtime-Setting).
+  display_.showScreen("settings", sound_.enabled() ? "sound on" : "sound off",
+                      "");
+  display_.drawNavBar(menu_.index(), Menu::count(), "B: toggle");
 }
 
 void App::renderInfoWidget() {
