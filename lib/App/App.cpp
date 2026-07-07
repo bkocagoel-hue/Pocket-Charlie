@@ -180,29 +180,52 @@ void App::loop() {
     }
   }
 
-  // Sprint 5: Productivity-Ereignisse in kurze emotionale Momente uebersetzen
-  // (nach der Bedienung abholen, damit Button-Aktionen sofort wirken).
+  // Sprint 5: Productivity-Ereignisse in kurze emotionale Momente, dezente
+  // Toene und Charlie-Microcopy uebersetzen (nach der Bedienung abholen,
+  // damit Button-Aktionen sofort wirken). Alles transient, keine Dauerstimmung.
   const ProdEvent pe = prod_.takeEvent();
   if (pe != ProdEvent::None) {
     if (menu_.current() == Screen::Productivity) screenRedraw_ = true;
+    const char* phrase = nullptr;
     switch (pe) {
-      case ProdEvent::Started:     persona_.poke(Emotion::Thoughtful, 2500); break;
-      case ProdEvent::Resumed:     persona_.poke(Emotion::Curious, 1500);    break;
-      case ProdEvent::Reset:       persona_.poke(Emotion::Confused, 1500);   break;
-      case ProdEvent::ModeChanged: persona_.poke(Emotion::Curious, 1500);    break;
+      case ProdEvent::Started:
+        persona_.poke(Emotion::Thoughtful, 2500);
+        phrase = phrases::kFocusStart[random(phrases::kFocusStartN)];
+        break;
+      case ProdEvent::Resumed:
+        persona_.poke(Emotion::Curious, 1500);
+        break;
+      case ProdEvent::Paused:  // bewusst ruhig: kein Poke, nur ein Satz
+        phrase = phrases::kProdPause[random(phrases::kProdPauseN)];
+        break;
+      case ProdEvent::Reset:
+        persona_.poke(Emotion::Confused, 1500);
+        phrase = phrases::kProdReset[random(phrases::kProdResetN)];
+        break;
+      case ProdEvent::ModeChanged:
+        persona_.poke(Emotion::Curious, 1500);
+        break;
       case ProdEvent::CountdownDone:
         persona_.poke(Emotion::Happy, 2500);  // Timer gelandet
         sound_.playTimerDone();
+        phrase = phrases::kProdDone[random(phrases::kProdDoneN)];
         break;
       case ProdEvent::FocusDone:
         persona_.poke(Emotion::Happy, 2000);  // Break beginnt
         sound_.playFocusDone();
+        phrase = phrases::kProdPause[random(phrases::kProdPauseN)];
         break;
       case ProdEvent::BreakDone:
         persona_.poke(Emotion::Excited, 2500);  // Durchgang geschafft
         sound_.playBreakDone();
+        phrase = phrases::kProdDone[random(phrases::kProdDoneN)];
         break;
-      default: break;  // Paused: bewusst ruhig (kein Poke)
+      default:
+        break;
+    }
+    if (phrase != nullptr && now - lastSayMs_ >= kSayGapMs) {
+      face_.say(phrase, kSayMs);
+      lastSayMs_ = now;  // blockt die generische Microcopy des Emotionswechsels
     }
   }
 
