@@ -9,6 +9,7 @@
 //  Abschaltbar (enabled-Flag) - der Settings-Screen haengt sich hier ein.
 // ============================================================================
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pc {
@@ -45,8 +46,17 @@ class Sound {
   // Sprint 7: kurzer "Karten ziehen"-Ton fuer Focus Card (Mini-App 2).
   void playCardDraw();
 
+  // Sprint 7: Beatbox (Mini-App 3) - vier kurze, prozedural synthetisierte
+  // Drum-PCM-Samples (kein tone()-Beep) ueber eigene Speaker-Kanaele, damit
+  // sich schnell aufeinanderfolgende Hits nicht gegenseitig abschneiden.
+  void playBeatboxKick();
+  void playBeatboxSnare();
+  void playBeatboxHihat();
+  void playBeatboxClap();
+
  private:
   void tone(float freqHz, std::uint32_t durMs);
+  void playRaw(int channel, const std::int16_t* pcmData, std::size_t sampleCount);
 
   bool enabled_ = true;
   bool available_ = false;

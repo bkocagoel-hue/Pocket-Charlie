@@ -74,6 +74,22 @@ class Display {
   void showPocketindex(const char* title, const char* const* lines,
                        int lineCount, int index, int count, bool pulse);
 
+  // Sprint 7 (Beatbox Touch-Zonen): 2x2-Raster im Content-Bereich (oberhalb
+  // des Button-Bands, siehe isButtonBandZone()). Reine Geometrie - Display
+  // kennt Beatbox/DrumKit bewusst nicht (Single Responsibility), Aufrufer
+  // mappt den zurueckgegebenen Index 0..3 selbst auf seine Domaene.
+  // Zonen-Reihenfolge: 0=oben-links, 1=oben-rechts, 2=unten-links,
+  // 3=unten-rechts - dieselbe Reihenfolge wie "kitNames" in
+  // showBeatboxGrid().
+  static int beatboxZoneAt(std::int16_t x, std::int16_t y);
+
+  // Zeichnet das Beatbox-Raster: vier Labels (kitNames[0..3], siehe
+  // beatboxZoneAt() fuer die Zonen-Reihenfolge) plus Trennlinien.
+  // "flashZone" (-1 = keiner) hebt eine Zone kurz farblich hervor
+  // (Tap-Feedback) - Teil desselben Redraw-Aufrufs, kein Extra-Draw pro
+  // Frame (kein Flackern), gleiches Muster wie showPocketindex()s "pulse".
+  void showBeatboxGrid(const char* const kitNames[4], int flashZone);
+
  private:
   void clear();
 

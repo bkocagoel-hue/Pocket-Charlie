@@ -52,6 +52,7 @@ void App::setup() {
   sound_.begin();    // Sprint 5: dezentes Timer-Audio (stumm-sicher)
   dice_.begin();     // Sprint 7: Dice/Coin (rein lokal, kein Zeitverhalten)
   card_.begin();     // Sprint 7: Focus Card (rein lokal, kein Zeitverhalten)
+  beat_.begin();     // Sprint 7: Beatbox (rein lokal, kein Zeitverhalten)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -307,6 +308,28 @@ void App::handleInput() {
     return;
   }
 
+  // Sprint 7 (Beatbox Touch-Zonen): Taps im Content-Bereich des Beatbox-
+  // Screens loesen den Drum-Hit der getroffenen Zone direkt aus - kein
+  // Umweg mehr ueber A/C-Zyklen wie bei Dice/FocusCard. Menue-Icon-Zone
+  // (oben behandelt, hat Vorrang) und Button-Band (unten, A/B/C bleiben
+  // fuer BtnB-Halten/Pocketindex aktiv) sind bewusst ausgenommen.
+  if (menu_.current() == Screen::Beatbox && input_.wasPressed() &&
+      !Display::isButtonBandZone(input_.touchY())) {
+    const auto kit =
+        static_cast<DrumKit>(Display::beatboxZoneAt(input_.touchX(), input_.touchY()));
+    beat_.hit(kit);
+    screenRedraw_ = true;
+    beatFlashZone_ = static_cast<int>(kit);
+    beatFlashUntil_ = millis() + 150;
+    switch (kit) {
+      case DrumKit::Kick:  sound_.playBeatboxKick();  break;
+      case DrumKit::Snare: sound_.playBeatboxSnare(); break;
+      case DrumKit::Hihat: sound_.playBeatboxHihat(); break;
+      case DrumKit::Clap:  sound_.playBeatboxClap();  break;
+    }
+    return;
+  }
+
   // Touch bleibt emotionale Interaktion: Charlie schaut zum Punkt + blinzelt.
   // (Buttons steuern die Menuefuehrung - siehe handleButtons().)
   if (input_.wasPressed()) {
@@ -491,6 +514,10 @@ void App::handleButtons(std::uint32_t nowMs) {
       screenRedraw_ = true;
       sound_.playCardDraw();
     }
+  } else if (menu_.current() == Screen::Beatbox) {
+    // Sprint 7 (Beatbox Touch-Zonen): Hits laufen ausschliesslich ueber
+    // Touch-Zonen (siehe handleInput()) - A/B/C bewusst ohne eigene
+    // Funktion auf diesem Screen, kein zweiter Weg zum selben Hit.
   } else if (input_.btnBClicked()) {
     // Clock/Online/Settings/Info: A/C bewusst (noch) ohne eigene Funktion -
     // BtnB-Verhalten inhaltlich unveraendert gegenueber vor Sprint 7, nur
@@ -565,6 +592,11 @@ void App::renderScreen(std::uint32_t nowMs) {
     menuIconFlash_ = false;
     screenRedraw_ = true;
   }
+  // Beatbox-Zonen-Tap-Feedback-Ende -> einmal neu zeichnen (Highlight weg).
+  if (beatFlashZone_ != -1 && nowMs >= beatFlashUntil_) {
+    beatFlashZone_ = -1;
+    screenRedraw_ = true;
+  }
   // Screen gewechselt (oder kam vom Face) -> neu zeichnen.
   if (static_cast<int>(s) != lastRenderedScreen_) screenRedraw_ = true;
 
@@ -582,6 +614,7 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Info:         renderInfoWidget();         break;
     case Screen::Dice:         renderDiceWidget();         break;
     case Screen::FocusCard:    renderFocusCardWidget();    break;
+    case Screen::Beatbox:      renderBeatboxWidget();      break;
     default:                   break;
   }
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
@@ -768,6 +801,18 @@ void App::renderFocusCardWidget() {
   display_.showScreen(card_.categoryName(), text, sub);
   display_.drawNavBar(menu_.index(), Menu::count(), "A: prev cat", "B: draw",
                       "C: next cat");
+}
+
+void App::renderBeatboxWidget() {
+  // Sprint 7 (Touch-Zonen): dritte Pocketindex-Mini-App. Vier Zonen zeigen
+  // alle Sounds gleichzeitig (kein A/C-Zyklus mehr); ein Tap trifft direkt.
+  // Reihenfolge muss zu Display::beatboxZoneAt() passen (0=oben-links,
+  // 1=oben-rechts, 2=unten-links, 3=unten-rechts) - dieselbe wie DrumKit.
+  static const char* const kLabels[4] = {"KICK", "SNARE", "HIHAT", "CLAP"};
+  display_.showBeatboxGrid(kLabels, beatFlashZone_);
+  // Nur die Positions-Punktreihe (wie jeder andere Widget-Screen) - keine
+  // A/B/C-Hints, die Tasten sind hier bewusst inert (siehe handleButtons()).
+  display_.drawNavBar(menu_.index(), Menu::count(), "", "", "");
 }
 
 }  // namespace pc

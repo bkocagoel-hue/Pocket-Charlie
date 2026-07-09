@@ -278,4 +278,52 @@ void Display::showPocketindex(const char* title, const char* const* lines,
   }
 }
 
+int Display::beatboxZoneAt(std::int16_t x, std::int16_t y) {
+  const std::int32_t w = M5.Display.width();
+  const std::int32_t contentH =
+      M5.Display.height() - static_cast<std::int32_t>(config::kTouchButtonHeight);
+  const int col = (x < w / 2) ? 0 : 1;
+  const int row = (y < contentH / 2) ? 0 : 1;
+  return row * 2 + col;
+}
+
+void Display::showBeatboxGrid(const char* const kitNames[4], int flashZone) {
+  clear();
+  const std::int32_t w = M5.Display.width();
+  const std::int32_t contentH =
+      M5.Display.height() - static_cast<std::int32_t>(config::kTouchButtonHeight);
+  const std::int32_t colW = w / 2;
+  const std::int32_t rowH = contentH / 2;
+
+  // Trennlinien zwischen den vier Zonen.
+  M5.Display.fillRect(colW - 1, 0, 2, contentH, kColorDim);
+  M5.Display.fillRect(0, rowH - 1, w, 2, kColorDim);
+
+  M5.Display.setTextDatum(middle_center);
+  for (int zone = 0; zone < 4; ++zone) {
+    const int col = zone % 2;
+    const int row = zone / 2;
+    const std::int32_t zx = col * colW;
+    const std::int32_t zy = row * rowH;
+
+    if (zone == flashZone) {
+      // Kurzer Tap-Flash: Zone fuellen, Text in Hintergrundfarbe darauf.
+      M5.Display.fillRect(zx + 2, zy + 2, colW - 4, rowH - 4, config::kColorEye);
+      M5.Display.setTextColor(config::kColorBackground, config::kColorEye);
+    } else {
+      M5.Display.setTextColor(config::kColorText, config::kColorBackground);
+    }
+
+    M5.Display.setTextSize(2);
+    char fitted[16];
+    const std::int32_t maxW = colW - 16;
+    const char* label = kitNames[zone];
+    if (M5.Display.textWidth(label) > maxW) {
+      truncateWithEllipsis(label, maxW, fitted, sizeof(fitted));
+      label = fitted;
+    }
+    M5.Display.drawString(label, zx + colW / 2, zy + rowH / 2);
+  }
+}
+
 }  // namespace pc
