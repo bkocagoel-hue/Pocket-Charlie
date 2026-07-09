@@ -16,6 +16,7 @@
 #include "Dice.h"
 #include "Display.h"
 #include "Face.h"
+#include "FocusCard.h"
 #include "Input.h"
 #include "InputContext.h"
 #include "Menu.h"
@@ -55,6 +56,7 @@ class App {
   void renderSettingsWidget();
   void renderInfoWidget();
   void renderDiceWidget();
+  void renderFocusCardWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons
@@ -66,6 +68,7 @@ class App {
   Productivity   prod_;     // Sprint 5: Stopwatch/Countdown/Pomodoro
   Sound          sound_;    // Sprint 5: dezentes Timer-Audio (abschaltbar)
   Dice           dice_;     // Sprint 7: erste Pocketindex-Mini-App (d6/d20/Muenze)
+  FocusCard      card_;     // Sprint 7: zweite Pocketindex-Mini-App (Focus/Break/Reset-Prompts)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;

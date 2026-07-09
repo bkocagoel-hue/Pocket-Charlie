@@ -42,6 +42,9 @@ class Sound {
   // Sprint 7: kurzer "Wuerfel/Muenze"-Ton fuers Dice-Ergebnis (Mini-App 1).
   void playDiceRoll();
 
+  // Sprint 7: kurzer "Karten ziehen"-Ton fuer Focus Card (Mini-App 2).
+  void playCardDraw();
+
  private:
   void tone(float freqHz, std::uint32_t durMs);
 

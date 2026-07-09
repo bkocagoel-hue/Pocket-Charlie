@@ -36,4 +36,6 @@ void Sound::playAdjustTick() { tone(660.0f, 50); }  // E5, neutrales In-Screen-T
 
 void Sound::playDiceRoll() { tone(300.0f, 70); }  // D4, kurzer "Thud"
 
+void Sound::playCardDraw() { tone(880.0f, 60); }  // A5, kurzer "Flip"
+
 }  // namespace pc

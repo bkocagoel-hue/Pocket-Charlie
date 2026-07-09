@@ -51,6 +51,7 @@ void App::setup() {
   prod_.begin();     // Sprint 5: Fokus-Werkzeuge (rein lokal)
   sound_.begin();    // Sprint 5: dezentes Timer-Audio (stumm-sicher)
   dice_.begin();     // Sprint 7: Dice/Coin (rein lokal, kein Zeitverhalten)
+  card_.begin();     // Sprint 7: Focus Card (rein lokal, kein Zeitverhalten)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -474,6 +475,22 @@ void App::handleButtons(std::uint32_t nowMs) {
       screenRedraw_ = true;
       sound_.playDiceRoll();
     }
+  } else if (menu_.current() == Screen::FocusCard) {
+    // A/C: Kategorie wechseln (Focus/Break/Reset) - bewusst kein neuer Zug.
+    // B: Karte ziehen (einziger Weg zu einem neuen Prompt).
+    if (interaction_.btnA()) {
+      card_.cyclePrev();
+      screenRedraw_ = true;
+    }
+    if (interaction_.btnC()) {
+      card_.cycleNext();
+      screenRedraw_ = true;
+    }
+    if (input_.btnBClicked()) {
+      card_.draw();
+      screenRedraw_ = true;
+      sound_.playCardDraw();
+    }
   } else if (input_.btnBClicked()) {
     // Clock/Online/Settings/Info: A/C bewusst (noch) ohne eigene Funktion -
     // BtnB-Verhalten inhaltlich unveraendert gegenueber vor Sprint 7, nur
@@ -564,6 +581,7 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Settings:     renderSettingsWidget();     break;
     case Screen::Info:         renderInfoWidget();         break;
     case Screen::Dice:         renderDiceWidget();         break;
+    case Screen::FocusCard:    renderFocusCardWidget();    break;
     default:                   break;
   }
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
@@ -738,6 +756,18 @@ void App::renderDiceWidget() {
   display_.showScreen(dice_.modeName(), result, sub);
   display_.drawNavBar(menu_.index(), Menu::count(), "A: prev mode", "B: roll",
                       "C: next mode");
+}
+
+void App::renderFocusCardWidget() {
+  // Sprint 7: zweite Pocketindex-Mini-App. A/C wechseln die Kategorie (kein
+  // neuer Zug, rein informativ bis zum naechsten B), B zieht eine Karte.
+  // showScreen()s eingebautes Text-Fitting uebernimmt die laengeren Prompts
+  // sicher (wie schon bei Online-Thoughts) - kein eigenes Kuerzen noetig.
+  const char* text = card_.hasDrawn() ? card_.cardText() : "";
+  const char* sub = card_.hasDrawn() ? "" : "tap B for a card";
+  display_.showScreen(card_.categoryName(), text, sub);
+  display_.drawNavBar(menu_.index(), Menu::count(), "A: prev cat", "B: draw",
+                      "C: next cat");
 }
 
 }  // namespace pc
