@@ -71,6 +71,12 @@ class App {
   std::uint32_t screenFlashUntil_ = 0;
   char uptimeBuf_[12] = {0};
 
+  // Sprint 7, E1: eigenes, kurzes Tap-Feedback fuer das Menue-Icon -
+  // bewusst getrennt von flashActive_ (das ueberschreibt sonst die Sub-Zeile
+  // jedes Widgets mit "ok", obwohl der Icon-Tap gar keine Screen-Aktion ist).
+  bool menuIconFlash_ = false;
+  std::uint32_t menuIconFlashUntil_ = 0;
+
   // Sprint 6, E3: "provider ai:status" fuer den Online-Screen (z. B.
   // "ollama ai:on"), aus OnlineClient::providerName()/aiStatusName() gebaut.
   char aiSubBuf_[24] = {0};

@@ -159,4 +159,26 @@ void Display::drawNavBar(int index, int count, const char* action) {
   }
 }
 
+void Display::drawMenuIcon(bool highlight) {
+  // Drei kurze Balken (Hamburger-Icon) oben rechts - im Normalzustand
+  // dezent, bei "highlight" kurz heller als sichtbares Tap-Feedback.
+  const std::int32_t w = M5.Display.width();
+  constexpr std::int32_t kBarW = 16;
+  constexpr std::int32_t kBarH = 2;
+  constexpr std::int32_t kGap  = 5;
+  constexpr std::int32_t kRightMargin = 6;
+  constexpr std::int32_t kTopMargin   = 8;
+  const std::int32_t x = w - kRightMargin - kBarW;
+  const std::uint16_t color =
+      highlight ? config::kColorText : kColorDim;
+  for (int i = 0; i < 3; ++i) {
+    M5.Display.fillRect(x, kTopMargin + i * kGap, kBarW, kBarH, color);
+  }
+}
+
+bool Display::isMenuIconZone(std::int16_t x, std::int16_t y) {
+  const std::int32_t w = M5.Display.width();
+  return x >= w - kMenuIconZonePx && y < kMenuIconZonePx;
+}
+
 }  // namespace pc

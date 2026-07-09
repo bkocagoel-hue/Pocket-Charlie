@@ -278,6 +278,10 @@ void App::loop() {
       face_.setEmotion(persona_.current());
       face_.update(now);
       face_.render();
+      // Sprint 7, E1 (gefixt): KEIN zusaetzlicher Icon-Draw hier - ein
+      // separater M5.Display-Schreibzugriff jeden Frame (~30x/s) direkt nach
+      // Faces eigenem Canvas-Push verursachte sichtbares Flackern. Face
+      // bleibt bewusst ohne Icon (und ohne Face.cpp-Aenderung).
       lastRenderedScreen_ = -1;  // Display zeigt jetzt das Gesicht
     } else {
       renderScreen(now);
@@ -288,6 +292,30 @@ void App::loop() {
 }
 
 void App::handleInput() {
+  // Sprint 7, E1 Debug: rohe Touch-Koordinaten bei jedem Antippen loggen,
+  // solange die Icon-Hitbox getestet/kalibriert wird.
+  if (input_.wasPressed()) {
+    Serial.printf("[Touch] x=%d y=%d\n", input_.touchX(), input_.touchY());
+  }
+
+  // Menue-Icon-Zone oben rechts - nur auf den Widget-Screens aktiv (Face
+  // zeigt das Icon (noch) nicht, siehe loop()/renderScreen(), daher bleibt
+  // hier bewusst auch keine unsichtbare Trefferzone). Noch kein echter
+  // Launcher (folgt in Einheit 3); ein Tap hier darf NICHT zusaetzlich
+  // Faces lookAt()/blinkNow() ausloesen. Eigenes, kurzes Tap-Feedback
+  // (menuIconFlash_) statt flashActive_ - sonst wuerde ein Icon-Tap die
+  // Sub-Zeile jedes Widgets ueberschreiben, obwohl gar keine Screen-Aktion
+  // passiert ist.
+  if (input_.wasPressed() && menu_.current() != Screen::Face &&
+      Display::isMenuIconZone(input_.touchX(), input_.touchY())) {
+    menuIconFlash_ = true;
+    menuIconFlashUntil_ = millis() + 250;
+    screenRedraw_ = true;
+    Serial.printf("[Menu] icon tap x=%d y=%d\n", input_.touchX(),
+                  input_.touchY());
+    return;
+  }
+
   // Touch bleibt emotionale Interaktion: Charlie schaut zum Punkt + blinzelt.
   // (Buttons steuern die Menuefuehrung - siehe loop().)
   if (input_.wasPressed()) {
@@ -332,6 +360,11 @@ void App::renderScreen(std::uint32_t nowMs) {
     flashActive_ = false;
     screenRedraw_ = true;
   }
+  // Menue-Icon-Tap-Feedback-Ende -> ebenfalls einmal neu zeichnen.
+  if (menuIconFlash_ && nowMs >= menuIconFlashUntil_) {
+    menuIconFlash_ = false;
+    screenRedraw_ = true;
+  }
   // Screen gewechselt (oder kam vom Face) -> neu zeichnen.
   if (static_cast<int>(s) != lastRenderedScreen_) screenRedraw_ = true;
 
@@ -349,6 +382,11 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Info:         renderInfoWidget();         break;
     default:                   break;
   }
+  // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
+  // Teil desselben Redraw-Aufrufs wie showScreen()/drawNavBar() (kein
+  // separater Extra-Draw pro Frame -> kein Flackern). "menuIconFlash_"
+  // laesst es kurz aufblitzen (Tap-Feedback), noch kein Launcher-Inhalt.
+  display_.drawMenuIcon(menuIconFlash_);
 }
 
 void App::renderClockWidget(std::uint32_t nowMs) {
