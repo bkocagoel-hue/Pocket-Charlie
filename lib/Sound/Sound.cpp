@@ -34,4 +34,6 @@ void Sound::playPocketSelect() { tone(1046.0f, 130); }  // C6, warmer Confirm
 
 void Sound::playAdjustTick() { tone(660.0f, 50); }  // E5, neutrales In-Screen-Tick
 
+void Sound::playDiceRoll() { tone(300.0f, 70); }  // D4, kurzer "Thud"
+
 }  // namespace pc

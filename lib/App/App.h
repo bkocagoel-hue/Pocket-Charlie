@@ -13,6 +13,7 @@
 
 #include <cstdint>
 
+#include "Dice.h"
 #include "Display.h"
 #include "Face.h"
 #include "Input.h"
@@ -53,6 +54,7 @@ class App {
   void renderProductivityWidget();
   void renderSettingsWidget();
   void renderInfoWidget();
+  void renderDiceWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons
@@ -63,6 +65,7 @@ class App {
   OnlineClient   online_;   // Sprint 4: Bridge-Ping (Task auf Core 0)
   Productivity   prod_;     // Sprint 5: Stopwatch/Countdown/Pomodoro
   Sound          sound_;    // Sprint 5: dezentes Timer-Audio (abschaltbar)
+  Dice           dice_;     // Sprint 7: erste Pocketindex-Mini-App (d6/d20/Muenze)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;

@@ -39,6 +39,9 @@ class Sound {
   // "in der App" auch akustisch unterscheidbar bleiben.
   void playAdjustTick();
 
+  // Sprint 7: kurzer "Wuerfel/Muenze"-Ton fuers Dice-Ergebnis (Mini-App 1).
+  void playDiceRoll();
+
  private:
   void tone(float freqHz, std::uint32_t durMs);
 

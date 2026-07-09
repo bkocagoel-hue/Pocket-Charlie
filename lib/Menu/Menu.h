@@ -12,7 +12,7 @@
 namespace pc {
 
 enum class Screen : std::uint8_t {
-  Face = 0, Clock, Mood, Online, Productivity, Settings, Info
+  Face = 0, Clock, Mood, Online, Productivity, Settings, Info, Dice
 };
 
 class Menu {
@@ -50,6 +50,7 @@ class Menu {
     static const char* kProductivity[] = {"Focus tools -", "stopwatch, timer &", "pomodoro flow."};
     static const char* kSettings[] = {"Sound &", "preferences."};
     static const char* kInfo[] = {"Version &", "system info."};
+    static const char* kDice[] = {"Quick decisions -", "d6, d20 or a", "coin flip."};
     switch (static_cast<Screen>(idx)) {
       case Screen::Face:         *outCount = 3; return kFace;
       case Screen::Clock:        *outCount = 3; return kClock;
@@ -58,6 +59,7 @@ class Menu {
       case Screen::Productivity: *outCount = 3; return kProductivity;
       case Screen::Settings:     *outCount = 2; return kSettings;
       case Screen::Info:         *outCount = 2; return kInfo;
+      case Screen::Dice:         *outCount = 3; return kDice;
       default:                   *outCount = 0; return nullptr;
     }
   }
@@ -103,11 +105,12 @@ class Menu {
       case Screen::Productivity: return "Productivity";
       case Screen::Settings:     return "Settings";
       case Screen::Info:         return "Info";
+      case Screen::Dice:         return "Dice";
       default:                   return "?";
     }
   }
 
-  static constexpr int kCount = 7;
+  static constexpr int kCount = 8;
   Screen cur_ = Screen::Face;
   bool pocketOpen_ = false;
   int pocketIndex_ = 0;

@@ -50,6 +50,7 @@ void App::setup() {
                      // deaktiviert. Pings nur manuell via BtnB.
   prod_.begin();     // Sprint 5: Fokus-Werkzeuge (rein lokal)
   sound_.begin();    // Sprint 5: dezentes Timer-Audio (stumm-sicher)
+  dice_.begin();     // Sprint 7: Dice/Coin (rein lokal, kein Zeitverhalten)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -457,6 +458,22 @@ void App::handleButtons(std::uint32_t nowMs) {
       screenFlashUntil_ = nowMs + 1000;
       screenRedraw_ = true;
     }
+  } else if (menu_.current() == Screen::Dice) {
+    // A/C: Modus wechseln (d6/d20/Muenze) - bewusst kein Reroll, nur
+    // Auswahl. B: wuerfeln/werfen (einziger Weg zu einem neuen Ergebnis).
+    if (interaction_.btnA()) {
+      dice_.cyclePrev();
+      screenRedraw_ = true;
+    }
+    if (interaction_.btnC()) {
+      dice_.cycleNext();
+      screenRedraw_ = true;
+    }
+    if (input_.btnBClicked()) {
+      dice_.roll();
+      screenRedraw_ = true;
+      sound_.playDiceRoll();
+    }
   } else if (input_.btnBClicked()) {
     // Clock/Online/Settings/Info: A/C bewusst (noch) ohne eigene Funktion -
     // BtnB-Verhalten inhaltlich unveraendert gegenueber vor Sprint 7, nur
@@ -546,6 +563,7 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Productivity: renderProductivityWidget(); break;
     case Screen::Settings:     renderSettingsWidget();     break;
     case Screen::Info:         renderInfoWidget();         break;
+    case Screen::Dice:         renderDiceWidget();         break;
     default:                   break;
   }
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
@@ -709,6 +727,17 @@ void App::renderInfoWidget() {
   // A/C bewusst ohne eigene Funktion auf Info. BtnB loest im else-Zweig von
   // handleButtons() einen kurzen "Curious"-Moment aus - ehrlich benannt.
   display_.drawNavBar(menu_.index(), Menu::count(), "", "B: hey", "");
+}
+
+void App::renderDiceWidget() {
+  // Sprint 7: erste Pocketindex-Mini-App. A/C wechseln den Modus (kein
+  // Reroll, rein informativ bis zum naechsten B), B wuerfelt/wirft.
+  char result[8];
+  dice_.resultText(result, sizeof(result));
+  const char* sub = dice_.hasRolled() ? "" : "tap B to roll";
+  display_.showScreen(dice_.modeName(), result, sub);
+  display_.drawNavBar(menu_.index(), Menu::count(), "A: prev mode", "B: roll",
+                      "C: next mode");
 }
 
 }  // namespace pc
