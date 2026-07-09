@@ -21,6 +21,10 @@ constexpr std::uint32_t kBreakMs     = 5UL * 60UL * 1000UL;
 void Productivity::begin() {
   mode_ = ProdMode::Stopwatch;
   session_ = 1;
+  lapCount_ = 0;
+  countdownTargetMs_ = kCountdownMs;
+  focusTargetMs_ = kFocusMs;
+  breakTargetMs_ = kBreakMs;
   resetTimer();
 }
 
@@ -33,8 +37,8 @@ void Productivity::resetTimer() {
 
 std::uint32_t Productivity::targetMs() const {
   switch (mode_) {
-    case ProdMode::Countdown: return kCountdownMs;
-    case ProdMode::Pomodoro:  return inBreak_ ? kBreakMs : kFocusMs;
+    case ProdMode::Countdown: return countdownTargetMs_;
+    case ProdMode::Pomodoro:  return inBreak_ ? breakTargetMs_ : focusTargetMs_;
     default:                  return 0;  // Stoppuhr zaehlt frei hoch
   }
 }
@@ -99,20 +103,55 @@ void Productivity::primaryAction(std::uint32_t nowMs) {
   }
 }
 
-void Productivity::secondaryAction(std::uint32_t nowMs) {
+void Productivity::cycleModePrev() {
+  // Sprint 7, Fix: nur im Ready-Zustand sinnvoll (nichts laeuft, das
+  // Werkzeug wird noch gewaehlt) - waehrend Running/Paused/Done haben A/C
+  // ihre eigene, direkte Bedeutung (siehe resetStopwatch()/markLap()/
+  // adjustTarget()), ein Moduswechsel waere dort verwirrend/verlustreich.
+  if (status_ != ProdStatus::Ready) return;
+  mode_ = static_cast<ProdMode>((static_cast<int>(mode_) + 2) % 3);  // -1 mod 3
+  resetTimer();
+  session_ = 1;
+  event_ = ProdEvent::ModeChanged;
+}
+
+void Productivity::cycleModeNext() {
+  if (status_ != ProdStatus::Ready) return;
+  mode_ = static_cast<ProdMode>((static_cast<int>(mode_) + 1) % 3);
+  resetTimer();
+  session_ = 1;
+  event_ = ProdEvent::ModeChanged;
+}
+
+void Productivity::resetStopwatch(std::uint32_t nowMs) {
+  // Sprint 7, Fix: unbedingter, eindeutiger Reset fuer BtnA im Stopwatch-
+  // Modus - anders als secondaryAction() oben NIE ein Moduswechsel, egal
+  // in welchem Status. So stimmt der Footer-Hinweis "A: reset" immer.
   nowMs_ = nowMs;
-  if (status_ == ProdStatus::Ready) {
-    // Nichts laeuft: Halten wechselt den Modus - so bleibt BtnA/BtnC reine
-    // Screen-Navigation und Halten kollidiert nie mit einem Reset.
-    mode_ = static_cast<ProdMode>((static_cast<int>(mode_) + 1) % 3);
-    resetTimer();
-    session_ = 1;
-    event_ = ProdEvent::ModeChanged;
-    return;
-  }
   resetTimer();
   session_ = 1;
   event_ = ProdEvent::Reset;
+}
+
+void Productivity::markLap() {
+  ++lapCount_;  // bewusst nur ein Zaehler, keine Lap-Historie (Sprint 7, Fix)
+}
+
+void Productivity::adjustTarget(std::int32_t deltaMs) {
+  std::uint32_t* target = nullptr;
+  if (mode_ == ProdMode::Countdown) {
+    target = &countdownTargetMs_;
+  } else if (mode_ == ProdMode::Pomodoro) {
+    target = inBreak_ ? &breakTargetMs_ : &focusTargetMs_;
+  } else {
+    return;  // Stoppuhr hat kein Ziel
+  }
+  constexpr std::int64_t kMinMs = 60UL * 1000UL;       // 1 Minute
+  constexpr std::int64_t kMaxMs = 90UL * 60UL * 1000UL;  // 90 Minuten
+  std::int64_t next = static_cast<std::int64_t>(*target) + deltaMs;
+  if (next < kMinMs) next = kMinMs;
+  if (next > kMaxMs) next = kMaxMs;
+  *target = static_cast<std::uint32_t>(next);
 }
 
 const char* Productivity::modeName() const {
@@ -157,13 +196,27 @@ void Productivity::subText(char* out, std::size_t n) const {
 }
 
 const char* Productivity::actionHint() const {
+  // Sprint 7, Fix: "hold: mode"/"hold: reset" entfernt - BtnB-Halten ist
+  // jetzt global dem Pocketindex vorbehalten (siehe App::handleButtons()),
+  // ein Hinweis darauf hier waere irrefuehrend (Halten tut auf diesem
+  // Screen nichts Eigenes mehr, siehe cycleModePrev()/cycleModeNext()).
   switch (status_) {
-    case ProdStatus::Ready:   return "B: start   hold: mode";
-    case ProdStatus::Running: return "B: pause   hold: reset";
-    case ProdStatus::Paused:  return "B: resume  hold: reset";
-    case ProdStatus::Done:    return "B: ok      hold: reset";
+    case ProdStatus::Ready:   return "B: start";
+    case ProdStatus::Running: return "B: pause";
+    case ProdStatus::Paused:  return "B: resume";
+    case ProdStatus::Done:    return "B: ok";
     default:                  return "";
   }
+}
+
+const char* Productivity::aHint() const {
+  if (status_ == ProdStatus::Ready) return "A: prev tool";
+  return (mode_ == ProdMode::Stopwatch) ? "A: reset" : "A: -1m";
+}
+
+const char* Productivity::cHint() const {
+  if (status_ == ProdStatus::Ready) return "C: next tool";
+  return (mode_ == ProdMode::Stopwatch) ? "C: lap" : "C: +1m";
 }
 
 std::uint32_t Productivity::displaySeconds() const {

@@ -26,16 +26,22 @@ class Display {
   // Generischer Text-Screen (Sprint 3): Titel klein + Hauptinfo gross + Sub.
   void showScreen(const char* title, const char* mainText, const char* sub);
 
-  // Navigations-Hinweise (Sprint 5): dezente Leiste am unteren Rand, direkt
-  // ueber den A/B/C-Touch-Zonen. Punktreihe = Screens (aktueller violett),
-  // "<" / ">" = BtnA/BtnC, Mitte = optionale BtnB-Aktion (z. B. "B: start").
+  // Navigations-Hinweise (Sprint 5, Sprint 7 Fix): dezente Leiste am
+  // unteren Rand, direkt ueber den A/B/C-Touch-Zonen. Punktreihe = Screens
+  // (aktueller violett) - reine "du bist hier"-Information, denn der
+  // Wechsel zwischen Screens laeuft seit Sprint 7 ausschliesslich ueber den
+  // Pocketindex (Menue-Icon), nicht mehr ueber A/C. "aHint"/"bHint"/
+  // "cHint" zeigen deshalb screen-eigene Tastenfunktionen statt der
+  // frueheren "<"/">"-Navigationspfeile - leerer String zeichnet bewusst
+  // nichts (keine Pfeile mehr, die eine Navigation vortaeuschen wuerden).
   // Nach showScreen() aufrufen; das Face zeichnet bewusst keine Leiste.
-  void drawNavBar(int index, int count, const char* action);
+  void drawNavBar(int index, int count, const char* aHint, const char* bHint,
+                  const char* cHint);
 
   // Sprint 7, E1 (gefixt): dezentes Menue-Icon oben RECHTS (Touch-
-  // Einstiegspunkt fuer den kommenden Launcher, Einheit 3). Nur auf den
-  // Widget-Screens aufrufen (Teil von showScreen()s Redraw-Zyklus) - NICHT
-  // zusaetzlich pro Frame auf dem Face-Screen, das verursachte Flackern.
+  // Einstiegspunkt fuer den Pocketindex). Nur auf den Widget-Screens
+  // aufrufen (Teil von showScreen()s Redraw-Zyklus) - NICHT zusaetzlich pro
+  // Frame auf dem Face-Screen, das verursachte Flackern.
   // "highlight" zeigt kurzes Tap-Feedback (heller statt dezent).
   void drawMenuIcon(bool highlight = false);
 
@@ -43,6 +49,30 @@ class Display {
   // Quelle der Wahrheit, kein Zahlendrift). Nutzt die tatsaechliche
   // Panel-Breite (M5.Display.width()), kein hardcodiertes 320.
   static bool isMenuIconZone(std::int16_t x, std::int16_t y);
+
+  // Sprint 7, Fix (Pocketindex-Buttons): geometrische A/B/C-Touch-Zone
+  // (unteres Band, siehe M5.setTouchButtonHeight() in App::setup()). Rein
+  // positionsbasiert und bewusst UNABHAENGIG vom M5.BtnA/B/C-Debouncing -
+  // ein generischer "Touch schliesst den Pocketindex"-Handler darf einen
+  // A/B/C-Tap niemals faelschlich als Dismiss werten, auch wenn die
+  // (debounced) Button-Objekte den Druck ein paar Frames spaeter melden
+  // als der rohe Touch. Kein hardcodiertes 240 - nutzt M5.Display.height().
+  static bool isButtonBandZone(std::int16_t y);
+
+  // Sprint 7 (Pocketindex - Rolodex Notebook): Vollbild-Kartenindex (kein
+  // Overlay/Popup, kein Alpha-Blending - ein sauberer clear() + Redraw wie
+  // showScreen()). Zeigt genau EINE Karte (Titel + kurze Beschreibung) plus
+  // Kopfzeile mit Position ("03/07") und eine schmale Positions-Leiste
+  // rechts. "title"/"lines"/"lineCount"/"index"/"count" kommen von aussen
+  // (Menu::nameAt()/cardLines()/pocketIndex()/count()) - Display bleibt
+  // reine Render-Schicht und kennt die Menu/Screen-Struktur bewusst nicht
+  // (Single Responsibility). "pulse" laesst den Kartentitel kurz heller
+  // aufblitzen (Oeffnen/Wechsel/Auswahl-Feedback) - Teil desselben
+  // Redraw-Aufrufs, kein Extra-Draw pro Frame (kein Flackern). Menue-Icon
+  // zeichnet der Aufrufer separat dazu (siehe drawMenuIcon()), genau wie
+  // bei den Widget-Screens.
+  void showPocketindex(const char* title, const char* const* lines,
+                       int lineCount, int index, int count, bool pulse);
 
  private:
   void clear();

@@ -128,11 +128,13 @@ void Display::showScreen(const char* title, const char* mainText,
   }
 }
 
-void Display::drawNavBar(int index, int count, const char* action) {
+void Display::drawNavBar(int index, int count, const char* aHint,
+                         const char* bHint, const char* cHint) {
   const int32_t w = M5.Display.width();
   const int32_t cx = w / 2;
 
-  // Punktreihe: ein Punkt je Screen, der aktuelle groesser + violett.
+  // Punktreihe: ein Punkt je Screen, der aktuelle groesser + violett - reine
+  // Positionsanzeige (Screenwechsel laeuft ueber den Pocketindex).
   const int32_t dotY = 205;
   const int32_t gap = 14;
   int32_t x = cx - ((count - 1) * gap) / 2;
@@ -144,18 +146,23 @@ void Display::drawNavBar(int index, int count, const char* action) {
     }
   }
 
-  // "<" / ">" ueber den BtnA-/BtnC-Zonen (unteres Touch-Band, Drittel-Teilung).
+  // A/B/C-Hinweise ueber den jeweiligen Touch-Zonen - screen-eigene
+  // Funktionen statt der frueheren "<"/">"-Navigationspfeile. Leere
+  // Strings zeichnen bewusst nichts (kein Platzhalter, der eine Aktion
+  // vortaeuscht, wo keine ist).
   M5.Display.setTextDatum(middle_center);
-  M5.Display.setTextColor(kColorDim, config::kColorBackground);
-  M5.Display.setTextSize(2);
-  M5.Display.drawString("<", w / 6, 227);
-  M5.Display.drawString(">", w - w / 6, 227);
-
-  // Optionale BtnB-Aktion mittig (ueber der BtnB-Zone).
-  if (action != nullptr && action[0] != '\0') {
-    M5.Display.setTextSize(1);
+  M5.Display.setTextSize(1);
+  if (aHint != nullptr && aHint[0] != '\0') {
+    M5.Display.setTextColor(kColorDim, config::kColorBackground);
+    M5.Display.drawString(aHint, w / 6, 227);
+  }
+  if (cHint != nullptr && cHint[0] != '\0') {
+    M5.Display.setTextColor(kColorDim, config::kColorBackground);
+    M5.Display.drawString(cHint, w - w / 6, 227);
+  }
+  if (bHint != nullptr && bHint[0] != '\0') {
     M5.Display.setTextColor(config::kColorText, config::kColorBackground);
-    M5.Display.drawString(action, cx, 227);
+    M5.Display.drawString(bHint, cx, 227);
   }
 }
 
@@ -179,6 +186,96 @@ void Display::drawMenuIcon(bool highlight) {
 bool Display::isMenuIconZone(std::int16_t x, std::int16_t y) {
   const std::int32_t w = M5.Display.width();
   return x >= w - kMenuIconZonePx && y < kMenuIconZonePx;
+}
+
+bool Display::isButtonBandZone(std::int16_t y) {
+  const std::int32_t h = M5.Display.height();
+  return y >= h - static_cast<std::int32_t>(config::kTouchButtonHeight);
+}
+
+void Display::showPocketindex(const char* title, const char* const* lines,
+                              int lineCount, int index, int count,
+                              bool pulse) {
+  clear();
+  const std::int32_t w = M5.Display.width();
+  const std::int32_t cx = w / 2;
+
+  // Kopfzeile: "POCKETINDEX" links, Position ("03/07") rechts - endet vor
+  // der Menue-Icon-Zone, die der Aufrufer separat dazu zeichnet (siehe
+  // drawMenuIcon()), genau wie bei den Widget-Screens.
+  M5.Display.setTextDatum(top_left);
+  M5.Display.setTextColor(config::kColorText, config::kColorBackground);
+  M5.Display.setTextSize(2);
+  M5.Display.drawString("POCKETINDEX", 8, 8);
+
+  char posBuf[8];
+  std::snprintf(posBuf, sizeof(posBuf), "%02d/%02d", index + 1, count);
+  M5.Display.setTextDatum(top_right);
+  M5.Display.setTextColor(kColorDim, config::kColorBackground);
+  M5.Display.setTextSize(1);
+  M5.Display.drawString(posBuf, w - kMenuIconZonePx - 6, 11);
+
+  // Trennlinie unter dem Header.
+  constexpr std::int32_t kHeaderLineY = 26;
+  M5.Display.fillRect(6, kHeaderLineY, w - 12, 1, kColorDim);
+
+  // Kartentitel in Klammern, zentriert (Rolodex-Karte). "pulse" laesst ihn
+  // fuer einen Redraw heller aufblitzen (Oeffnen-/Wechsel-/Auswahl-
+  // Feedback) - Teil desselben Redraw-Aufrufs, kein Extra-Draw pro Frame.
+  char titleBuf[24];
+  std::snprintf(titleBuf, sizeof(titleBuf), "[ %s ]", title);
+  M5.Display.setTextDatum(top_center);
+  M5.Display.setTextColor(pulse ? config::kColorText : config::kColorEye,
+                          config::kColorBackground);
+  M5.Display.setTextSize(2);
+  M5.Display.drawString(titleBuf, cx, 56);
+
+  // Kartenbeschreibung: 1-3 kurze Zeilen, zentriert, gegen Ueberlauf
+  // abgesichert (wie schon in showScreen()) - in der Praxis greift das bei
+  // den kurzen Karten-Texten nie, bleibt aber ein Auffangnetz.
+  constexpr std::int32_t kLineTop = 96;
+  constexpr std::int32_t kLineH   = 20;
+  const std::int32_t maxLineWidth = w - 2 * kSideMargin - 20;
+  M5.Display.setTextDatum(top_center);
+  M5.Display.setTextColor(config::kColorText, config::kColorBackground);
+  M5.Display.setTextSize(1);
+  char fitted[32];
+  for (int i = 0; i < lineCount; ++i) {
+    const char* lineText = lines[i];
+    if (M5.Display.textWidth(lineText) > maxLineWidth) {
+      truncateWithEllipsis(lineText, maxLineWidth, fitted, sizeof(fitted));
+      lineText = fitted;
+    }
+    M5.Display.drawString(lineText, cx, kLineTop + i * kLineH);
+  }
+
+  // Trennlinie ueber dem Footer + Bedien-Hinweise (gleiche Rolle wie in
+  // drawNavBar()) - eigene Hinweise, da der Pocketindex A/B/C waehrend er
+  // offen ist exklusiv fuer sich beansprucht (siehe App::handleButtons()).
+  constexpr std::int32_t kFooterLineY = 200;
+  M5.Display.fillRect(6, kFooterLineY, w - 12, 1, kColorDim);
+  M5.Display.setTextDatum(middle_center);
+  M5.Display.setTextColor(kColorDim, config::kColorBackground);
+  M5.Display.setTextSize(1);
+  M5.Display.drawString("A prev      B open      C next", cx,
+                        kFooterLineY + 12);
+
+  // Schmale Positions-Leiste rechts: ein Tick je Karte, aktuelle in
+  // Akzentfarbe. Ersetzt im Einzelkarten-Modus die Scrollbar - kein
+  // Viewport-Fenster noetig (siehe Menu::pocketIndex()/count()).
+  const std::int32_t tickX = w - 6;
+  const std::int32_t tickTop = kHeaderLineY + 8;
+  const std::int32_t tickBottom = kFooterLineY - 8;
+  const std::int32_t tickSpan = tickBottom - tickTop;
+  for (int i = 0; i < count; ++i) {
+    const std::int32_t y =
+        (count > 1) ? (tickTop + (tickSpan * i) / (count - 1)) : tickTop;
+    if (i == index) {
+      M5.Display.fillCircle(tickX, y, 2, config::kColorEye);
+    } else {
+      M5.Display.fillCircle(tickX, y, 1, kColorDim);
+    }
+  }
 }
 
 }  // namespace pc

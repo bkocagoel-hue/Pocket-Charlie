@@ -34,8 +34,18 @@ class App {
  private:
   // Wertet die Eingaben dieses Frames aus und loest Reaktionen aus.
   void handleInput();
+  // Sprint 7: Button-Dispatch (A/C/B), aus loop() ausgelagert - eigene
+  // Methode mit klarer Prioritaet: offener Pocketindex besitzt A/C/B
+  // exklusiv (kein Fallthrough in die normale Screen-Navigation). Bleibt
+  // bewusst screen-bewusst (if/else auf menu_.current()), damit spaetere
+  // screen-spezifische Tastenbelegung (Stopwatch/Timer/Pomodoro/Settings)
+  // hier andocken kann, ohne die Struktur nochmal umbauen zu muessen.
+  void handleButtons(std::uint32_t nowMs);
   // Zeichnet die Text-Screens (Clock/Mood/Info) - nur bei Aenderung.
   void renderScreen(std::uint32_t nowMs);
+  // Sprint 7 (Pocketindex - Rolodex Notebook): Vollbild-Kartenindex - nur
+  // bei Aenderung (Oeffnen/Schliessen, Kartenwechsel, Pulse-Feedback).
+  void renderPocketindex();
   // Einzelne Text-Widgets (je genau ein Widget pro Screen).
   void renderClockWidget(std::uint32_t nowMs);
   void renderMoodWidget();
@@ -71,11 +81,26 @@ class App {
   std::uint32_t screenFlashUntil_ = 0;
   char uptimeBuf_[12] = {0};
 
+  // Sprint 7, Fix (Screen-eigene Tasten): kurzzeitiger "lap N"-Text anstatt
+  // des generischen "ok", wenn auf dem Productivity-Screen im Stopwatch-
+  // Modus eine Lap-Marke gesetzt wird - nutzt denselben flashActive_-Timer.
+  char lapFlashBuf_[16] = {0};
+
   // Sprint 7, E1: eigenes, kurzes Tap-Feedback fuer das Menue-Icon -
   // bewusst getrennt von flashActive_ (das ueberschreibt sonst die Sub-Zeile
   // jedes Widgets mit "ok", obwohl der Icon-Tap gar keine Screen-Aktion ist).
   bool menuIconFlash_ = false;
   std::uint32_t menuIconFlashUntil_ = 0;
+
+  // Sprint 7 (Pocketindex - Rolodex Notebook): eigener Redraw-Trigger fuer
+  // den Pocketindex, getrennt von screenRedraw_ (der gehoert den Widget-
+  // Screens; beide Pfade schliessen sich gegenseitig aus, siehe loop()).
+  bool pocketRedraw_ = false;
+  // Kurzer Highlight-Puls auf dem Kartentitel bei Oeffnen/Wechsel/Auswahl -
+  // dasselbe Timer-Flag-Muster wie menuIconFlash_ (ein Redraw beim Setzen,
+  // ein Redraw beim Ablaufen, kein Extra-Draw pro Frame -> kein Flackern).
+  bool pocketPulse_ = false;
+  std::uint32_t pocketPulseUntil_ = 0;
 
   // Sprint 6, E3: "provider ai:status" fuer den Online-Screen (z. B.
   // "ollama ai:on"), aus OnlineClient::providerName()/aiStatusName() gebaut.
