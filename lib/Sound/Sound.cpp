@@ -143,4 +143,6 @@ void Sound::playBeatboxSnare() { playRaw(1, snareBuf, kSnareLen); }
 void Sound::playBeatboxHihat() { playRaw(2, hihatBuf, kHihatLen); }
 void Sound::playBeatboxClap()  { playRaw(3, clapBuf,  kClapLen); }
 
+void Sound::playEightBallAsk() { tone(523.25f, 110); }  // C5, kurzer "frag mich"-Ton
+
 }  // namespace pc

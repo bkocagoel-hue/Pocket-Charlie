@@ -13,7 +13,7 @@ namespace pc {
 
 enum class Screen : std::uint8_t {
   Face = 0, Clock, Mood, Online, Productivity, Settings, Info, Dice, FocusCard,
-  Beatbox
+  Beatbox, EightBall
 };
 
 class Menu {
@@ -54,6 +54,7 @@ class Menu {
     static const char* kDice[] = {"Quick decisions -", "d6, d20 or a", "coin flip."};
     static const char* kFocusCard[] = {"A quick prompt -", "focus, break or", "reset, your call."};
     static const char* kBeatbox[] = {"Tiny drum machine -", "kick, snare, hihat", "or clap."};
+    static const char* kEightBall[] = {"Ask a question -", "get a wildly", "unreliable answer."};
     switch (static_cast<Screen>(idx)) {
       case Screen::Face:         *outCount = 3; return kFace;
       case Screen::Clock:        *outCount = 3; return kClock;
@@ -65,6 +66,7 @@ class Menu {
       case Screen::Dice:         *outCount = 3; return kDice;
       case Screen::FocusCard:    *outCount = 3; return kFocusCard;
       case Screen::Beatbox:      *outCount = 3; return kBeatbox;
+      case Screen::EightBall:    *outCount = 3; return kEightBall;
       default:                   *outCount = 0; return nullptr;
     }
   }
@@ -113,11 +115,12 @@ class Menu {
       case Screen::Dice:         return "Dice";
       case Screen::FocusCard:    return "Focus Card";
       case Screen::Beatbox:      return "Beatbox";
+      case Screen::EightBall:    return "8-Ball";
       default:                   return "?";
     }
   }
 
-  static constexpr int kCount = 10;
+  static constexpr int kCount = 11;
   Screen cur_ = Screen::Face;
   bool pocketOpen_ = false;
   int pocketIndex_ = 0;

@@ -16,6 +16,7 @@
 #include "Beatbox.h"
 #include "Dice.h"
 #include "Display.h"
+#include "EightBall.h"
 #include "Face.h"
 #include "FocusCard.h"
 #include "Input.h"
@@ -59,6 +60,7 @@ class App {
   void renderDiceWidget();
   void renderFocusCardWidget();
   void renderBeatboxWidget();
+  void renderEightBallWidget();
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons
@@ -72,6 +74,7 @@ class App {
   Dice           dice_;     // Sprint 7: erste Pocketindex-Mini-App (d6/d20/Muenze)
   FocusCard      card_;     // Sprint 7: zweite Pocketindex-Mini-App (Focus/Break/Reset-Prompts)
   Beatbox        beat_;     // Sprint 7: dritte Pocketindex-Mini-App (Kick/Snare/Hihat/Clap)
+  EightBall      eightBall_;// Sprint 7: vierte Pocketindex-Mini-App (Magic 8-Ball)
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;

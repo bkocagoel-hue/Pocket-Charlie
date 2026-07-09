@@ -54,6 +54,11 @@ class Sound {
   void playBeatboxHihat();
   void playBeatboxClap();
 
+  // Sprint 7: kurzer, leicht mysterioeser Ton fuer die 8-Ball-Antwort
+  // (Mini-App 4) - derselbe einfache tone()-Chokepoint wie Dice/FocusCard,
+  // kein PCM noetig.
+  void playEightBallAsk();
+
  private:
   void tone(float freqHz, std::uint32_t durMs);
   void playRaw(int channel, const std::int16_t* pcmData, std::size_t sampleCount);

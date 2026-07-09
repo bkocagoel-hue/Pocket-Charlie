@@ -53,6 +53,7 @@ void App::setup() {
   dice_.begin();     // Sprint 7: Dice/Coin (rein lokal, kein Zeitverhalten)
   card_.begin();     // Sprint 7: Focus Card (rein lokal, kein Zeitverhalten)
   beat_.begin();     // Sprint 7: Beatbox (rein lokal, kein Zeitverhalten)
+  eightBall_.begin();// Sprint 7: Magic 8-Ball (rein lokal, kein Zeitverhalten)
   nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
@@ -518,6 +519,14 @@ void App::handleButtons(std::uint32_t nowMs) {
     // Sprint 7 (Beatbox Touch-Zonen): Hits laufen ausschliesslich ueber
     // Touch-Zonen (siehe handleInput()) - A/B/C bewusst ohne eigene
     // Funktion auf diesem Screen, kein zweiter Weg zum selben Hit.
+  } else if (menu_.current() == Screen::EightBall) {
+    // A/C bewusst ohne eigene Funktion (wie Beatbox) - eine Frage stellt
+    // man nur auf eine Art. B: neue Antwort ziehen.
+    if (input_.btnBClicked()) {
+      eightBall_.ask();
+      screenRedraw_ = true;
+      sound_.playEightBallAsk();
+    }
   } else if (input_.btnBClicked()) {
     // Clock/Online/Settings/Info: A/C bewusst (noch) ohne eigene Funktion -
     // BtnB-Verhalten inhaltlich unveraendert gegenueber vor Sprint 7, nur
@@ -615,6 +624,7 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Dice:         renderDiceWidget();         break;
     case Screen::FocusCard:    renderFocusCardWidget();    break;
     case Screen::Beatbox:      renderBeatboxWidget();      break;
+    case Screen::EightBall:    renderEightBallWidget();    break;
     default:                   break;
   }
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
@@ -813,6 +823,15 @@ void App::renderBeatboxWidget() {
   // Nur die Positions-Punktreihe (wie jeder andere Widget-Screen) - keine
   // A/B/C-Hints, die Tasten sind hier bewusst inert (siehe handleButtons()).
   display_.drawNavBar(menu_.index(), Menu::count(), "", "", "");
+}
+
+void App::renderEightBallWidget() {
+  // Sprint 7: vierte Pocketindex-Mini-App. A/C bewusst ohne eigene Funktion
+  // (wie Beatbox) - B zieht eine neue (absichtlich alberne) Antwort.
+  const char* text = eightBall_.hasAsked() ? eightBall_.answerText() : "";
+  const char* sub = eightBall_.hasAsked() ? "" : "tap B to ask";
+  display_.showScreen("8-ball", text, sub);
+  display_.drawNavBar(menu_.index(), Menu::count(), "", "B: ask", "");
 }
 
 }  // namespace pc
