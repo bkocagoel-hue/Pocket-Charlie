@@ -14,6 +14,7 @@
 #include <cstdint>
 
 #include "Beatbox.h"
+#include "BehaviorEngine.h"
 #include "Dice.h"
 #include "Display.h"
 #include "EightBall.h"
@@ -72,6 +73,7 @@ class App {
   InputContext interaction_;  // Sprint 3: Eingaben -> Intents (read-only)
   Face    face_;     // Charlies animiertes Gesicht
   Persona persona_;  // Stimmungs-/Emotionszustand (Sprint 2)
+  BehaviorEngine behavior_;  // Sprint 8, Einheit 2: Prioritaet Emotion/Microcopy
   NetworkManager network_;  // Sprint 4: optionales WLAN (local-first)
   OnlineClient   online_;   // Sprint 4: Bridge-Ping (Task auf Core 0)
   Productivity   prod_;     // Sprint 5: Stopwatch/Countdown/Pomodoro
@@ -83,11 +85,6 @@ class App {
 
   // Zeitpunkt des letzten gerenderten Frames (fuer feste Bildrate).
   std::uint32_t lastFrameMs_ = 0;
-
-  // Sprint 3: Microcopy-Steuerung
-  Emotion       prevEmotion_ = Emotion::Neutral;
-  std::uint32_t lastSayMs_ = 0;
-  std::uint32_t nextIdlePhraseAt_ = 0;
 
   // Sprint 3: Button-Menuefuehrung / Text-Screens
   Menu menu_;
@@ -142,13 +139,6 @@ class App {
 
   // Sprint 5: Productivity-Screen zeichnet sekuendlich neu (wie Clock).
   std::uint32_t lastProdSec_ = 0;
-
-  // Sprint 4 E4B: Online-Ereignisse -> kleine emotionale Momente.
-  // Flanken-Erkennung fuer Bridge-/Thought-Ausgang + Fehlerzaehler (Sad).
-  int prevBridge_ = -1;
-  int prevThought_ = -1;
-  std::uint8_t prevThoughtSeq_ = 0;
-  std::uint8_t onlineFails_ = 0;
 
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
   //   WifiService wifi_;   // Netzwerk (Sprint 0/3)

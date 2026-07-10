@@ -6,18 +6,13 @@
 #include <cstring>
 
 #include "PcConfig.h"
-#include "Phrases.h"
 
 namespace pc {
 namespace {
-constexpr std::uint32_t kSayMs    = 1600;  // Anzeigedauer einer Textblase
-constexpr std::uint32_t kSayGapMs = 3000;  // Mindestabstand zwischen Spruechen
-
-// Sprint 4 E4B: Dauer der kleinen emotionalen Online-Momente (transient).
-constexpr std::uint32_t kExcitedMs = 2500;  // WLAN verbunden
-constexpr std::uint32_t kHappyNetMs = 1600;  // Thought erfolgreich
-constexpr std::uint32_t kConfusedMs = 2200;  // Bridge down / Timeout
-constexpr std::uint32_t kSadMs      = 2500;  // wiederholter Online-Fehler
+// Sprint 8, Einheit 2: kSayMs/kSayGapMs/kExcitedMs/kHappyNetMs/kConfusedMs/
+// kSadMs sind in BehaviorEngine.cpp umgezogen (dort verwendet). kCuriousMs
+// bleibt hier - direkte User-Input-Reaktion (System-BtnB), keine
+// Behavior-Engine-Zustaendigkeit.
 constexpr std::uint32_t kCuriousMs  = 3000;  // BtnB auf Text-Screens
 
 // Sprint 8 (Awake, Einheit 1): Anzahl interner System-Unterseiten
@@ -46,6 +41,7 @@ void App::setup() {
   interaction_.begin();
   face_.begin(M5.Display.width(), M5.Display.height());
   persona_.begin();
+  behavior_.begin(persona_, face_);  // Sprint 8, Einheit 2
   menu_.begin();
   network_.begin();  // Sprint 4: non-blocking; verbindet (falls Secrets) im
                      // Hintergrund waehrend des Boot-Splash. Ohne WLAN laeuft
@@ -58,7 +54,6 @@ void App::setup() {
   card_.begin();     // Sprint 7: Focus Card (rein lokal, kein Zeitverhalten)
   beat_.begin();     // Sprint 7: Beatbox (rein lokal, kein Zeitverhalten)
   eightBall_.begin();// Sprint 7: Magic 8-Ball (rein lokal, kein Zeitverhalten)
-  nextIdlePhraseAt_ = millis() + 30000;  // erste Idle-Microcopy fruehestens ~30 s
 
   // 4) Boot-Splash kurz stehen lassen, dann uebernimmt die Loop das Gesicht.
   //    (Blockierendes delay ist hier bewusst ok: einmalig, in setup().)
@@ -83,39 +78,10 @@ void App::loop() {
     online_.reset();  // altes Bridge-Ergebnis ist ohne WLAN nicht mehr ehrlich
   }
 
-  // Sprint 4 E4B: Online-Ereignisse als kleine emotionale Momente uebersetzen.
-  // Einweg (Persona haengt NIE vom Netz ab); Fehler sind kurze Momente, keine
-  // kaputte Dauerstimmung - danach faellt alles automatisch auf Neutral zurueck.
-  if (network_.justConnected()) {
-    persona_.poke(Emotion::Excited, kExcitedMs);
-  }
-  {
-    const int bs = static_cast<int>(online_.state());
-    const int ts = static_cast<int>(online_.thoughtState());
-    const bool pingFailed =
-        (bs == static_cast<int>(BridgeState::Down) &&
-         prevBridge_ == static_cast<int>(BridgeState::Checking));
-    const bool thoughtFailed =
-        (ts == static_cast<int>(ThoughtState::Failed) &&
-         prevThought_ == static_cast<int>(ThoughtState::Fetching));
-    if (pingFailed || thoughtFailed) {
-      ++onlineFails_;
-      persona_.poke(onlineFails_ >= 2 ? Emotion::Sad : Emotion::Confused,
-                    onlineFails_ >= 2 ? kSadMs : kConfusedMs);
-    }
-    const std::uint8_t seq = online_.thoughtSeq();
-    if (seq != prevThoughtSeq_) {  // neuer Thought angekommen
-      prevThoughtSeq_ = seq;
-      onlineFails_ = 0;
-      persona_.poke(Emotion::Happy, kHappyNetMs);
-    }
-    if (bs == static_cast<int>(BridgeState::Ok) &&
-        prevBridge_ == static_cast<int>(BridgeState::Checking)) {
-      onlineFails_ = 0;  // Health ok -> Fehlerserie beendet
-    }
-    prevBridge_ = bs;
-    prevThought_ = ts;
-  }
+  // Sprint 8, Einheit 2: Prioritaet 1 (kritische Systemereignisse) - reiner
+  // Verhaltens-Umzug aus dem vorherigen Inline-Block, siehe BehaviorEngine.
+  behavior_.onSystemEvent(now, online_.state(), online_.thoughtState(),
+                         online_.thoughtSeq(), network_.justConnected());
 
   // Sprint 3: Eingaben zu Intents klassifizieren (read-only) und loggen.
   // Aendert (noch) kein Verhalten - Persona/Face bleiben zustaendig.
@@ -137,96 +103,27 @@ void App::loop() {
 
   handleButtons(now);
 
-  // Sprint 5: Productivity-Ereignisse in kurze emotionale Momente, dezente
-  // Toene und Charlie-Microcopy uebersetzen (nach der Bedienung abholen,
-  // damit Button-Aktionen sofort wirken). Alles transient, keine Dauerstimmung.
+  // Sprint 5 + Sprint 8 Einheit 2: Productivity-Ereignisse (Prioritaet 2) -
+  // Sound bleibt hier (Behavior Engine kennt Sound bewusst nicht), Emotion/
+  // Phrase-Auswahl ist reiner Verhaltens-Umzug in BehaviorEngine.
   const ProdEvent pe = prod_.takeEvent();
   if (pe != ProdEvent::None) {
     if (menu_.current() == Screen::Focus) screenRedraw_ = true;
-    const char* phrase = nullptr;
     switch (pe) {
-      case ProdEvent::Started:
-        persona_.poke(Emotion::Thoughtful, 2500);
-        phrase = phrases::kFocusStart[random(phrases::kFocusStartN)];
-        break;
-      case ProdEvent::Resumed:
-        persona_.poke(Emotion::Curious, 1500);
-        break;
-      case ProdEvent::Paused:  // bewusst ruhig: kein Poke, nur ein Satz
-        phrase = phrases::kProdPause[random(phrases::kProdPauseN)];
-        break;
-      case ProdEvent::Reset:
-        persona_.poke(Emotion::Confused, 1500);
-        phrase = phrases::kProdReset[random(phrases::kProdResetN)];
-        break;
-      case ProdEvent::ModeChanged:
-        persona_.poke(Emotion::Curious, 1500);
-        break;
-      case ProdEvent::CountdownDone:
-        persona_.poke(Emotion::Happy, 2500);  // Timer gelandet
-        sound_.playTimerDone();
-        phrase = phrases::kProdDone[random(phrases::kProdDoneN)];
-        break;
-      case ProdEvent::FocusDone:
-        persona_.poke(Emotion::Happy, 2000);  // Break beginnt
-        sound_.playFocusDone();
-        phrase = phrases::kProdPause[random(phrases::kProdPauseN)];
-        break;
-      case ProdEvent::BreakDone:
-        persona_.poke(Emotion::Excited, 2500);  // Durchgang geschafft
-        sound_.playBreakDone();
-        phrase = phrases::kProdDone[random(phrases::kProdDoneN)];
-        break;
-      default:
-        break;
+      case ProdEvent::CountdownDone: sound_.playTimerDone();  break;
+      case ProdEvent::FocusDone:     sound_.playFocusDone();  break;
+      case ProdEvent::BreakDone:     sound_.playBreakDone();  break;
+      default: break;
     }
-    if (phrase != nullptr && now - lastSayMs_ >= kSayGapMs) {
-      face_.say(phrase, kSayMs);
-      lastSayMs_ = now;  // blockt die generische Microcopy des Emotionswechsels
-    }
+    const bool focusRunning = (prod_.status() == ProdStatus::Running);
+    behavior_.onProdEvent(now, pe, focusRunning);
   }
 
   persona_.update(now, input_);  // jede Runde: Eingabe-Flanken nicht verpassen
 
-  // Sprint 3: dezente Microcopy je nach Zustand (rate-limitiert).
-  const Emotion emo = persona_.current();
-  const bool sayAllowed = (now - lastSayMs_ >= kSayGapMs);
-  if (emo != prevEmotion_) {
-    // Emotionswechsel -> passende, seltene Microcopy (E4B: neue Emotionen).
-    const char* phrase = nullptr;
-    switch (emo) {
-      case Emotion::Happy:
-        phrase = phrases::kGreet[random(phrases::kGreetN)]; break;
-      case Emotion::Annoyed:
-        phrase = phrases::kGrumble[random(phrases::kGrumbleN)]; break;
-      case Emotion::Curious:
-        phrase = phrases::kCurious[random(phrases::kCuriousN)]; break;
-      case Emotion::Confused:
-        phrase = phrases::kConfused[random(phrases::kConfusedN)]; break;
-      case Emotion::Excited:
-        phrase = phrases::kExcited[random(phrases::kExcitedN)]; break;
-      case Emotion::Sad:
-        phrase = phrases::kSad[random(phrases::kSadN)]; break;
-      case Emotion::WakingUp:
-        phrase = phrases::kWakeUp[random(phrases::kWakeUpN)]; break;
-      default:
-        break;  // Neutral/Tired/Sleeping/Thoughtful: bewusst wortlos
-    }
-    if (sayAllowed && phrase != nullptr) {
-      face_.say(phrase, kSayMs);
-      lastSayMs_ = now;
-    }
-    prevEmotion_ = emo;
-  } else if (emo == Emotion::Neutral && now >= nextIdlePhraseAt_ && sayAllowed) {
-    const int mood = persona_.moodLevel();  // Mood light faerbt die Idle-Sprueche
-    const char* phrase =
-        (mood > 0) ? phrases::kIdleHigh[random(phrases::kIdleHighN)]
-      : (mood < 0) ? phrases::kIdleLow[random(phrases::kIdleLowN)]
-                   : phrases::kIdle[random(phrases::kIdleN)];
-    face_.say(phrase, kSayMs);
-    lastSayMs_ = now;
-    nextIdlePhraseAt_ = now + random(25000, 45000);
-  }
+  // Sprint 8, Einheit 2: Prioritaet 3/4 (Emotionswechsel-Microcopy, Idle-
+  // Phrasen) - liest den durch obige Pokes bereits aktualisierten Zustand.
+  behavior_.onEmotionTick(now, persona_.current(), persona_.moodLevel());
 
   if (now - lastFrameMs_ >= config::kFrameIntervalMs) {
     lastFrameMs_ = now;
