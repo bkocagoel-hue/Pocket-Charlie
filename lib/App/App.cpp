@@ -19,6 +19,10 @@ constexpr std::uint32_t kHappyNetMs = 1600;  // Thought erfolgreich
 constexpr std::uint32_t kConfusedMs = 2200;  // Bridge down / Timeout
 constexpr std::uint32_t kSadMs      = 2500;  // wiederholter Online-Fehler
 constexpr std::uint32_t kCuriousMs  = 3000;  // BtnB auf Text-Screens
+
+// Sprint 8 (Awake, Einheit 1): Anzahl interner System-Unterseiten
+// (0 = Status/Uptime, 1 = Settings/Sound, 2 = Info/Version).
+constexpr int kSystemPageCount = 3;
 }  // namespace
 
 void App::setup() {
@@ -138,7 +142,7 @@ void App::loop() {
   // damit Button-Aktionen sofort wirken). Alles transient, keine Dauerstimmung.
   const ProdEvent pe = prod_.takeEvent();
   if (pe != ProdEvent::None) {
-    if (menu_.current() == Screen::Productivity) screenRedraw_ = true;
+    if (menu_.current() == Screen::Focus) screenRedraw_ = true;
     const char* phrase = nullptr;
     switch (pe) {
       case ProdEvent::Started:
@@ -232,7 +236,7 @@ void App::loop() {
       // Productivity/Online) duerfen ihn nicht ueberzeichnen, da
       // renderScreen() hier bewusst nicht laeuft.
       renderPocketindex();
-    } else if (menu_.current() == Screen::Face) {
+    } else if (menu_.current() == Screen::Home) {
       face_.setEmotion(persona_.current());
       face_.update(now);
       face_.render();
@@ -309,27 +313,10 @@ void App::handleInput() {
     return;
   }
 
-  // Sprint 7 (Beatbox Touch-Zonen): Taps im Content-Bereich des Beatbox-
-  // Screens loesen den Drum-Hit der getroffenen Zone direkt aus - kein
-  // Umweg mehr ueber A/C-Zyklen wie bei Dice/FocusCard. Menue-Icon-Zone
-  // (oben behandelt, hat Vorrang) und Button-Band (unten, A/B/C bleiben
-  // fuer BtnB-Halten/Pocketindex aktiv) sind bewusst ausgenommen.
-  if (menu_.current() == Screen::Beatbox && input_.wasPressed() &&
-      !Display::isButtonBandZone(input_.touchY())) {
-    const auto kit =
-        static_cast<DrumKit>(Display::beatboxZoneAt(input_.touchX(), input_.touchY()));
-    beat_.hit(kit);
-    screenRedraw_ = true;
-    beatFlashZone_ = static_cast<int>(kit);
-    beatFlashUntil_ = millis() + 150;
-    switch (kit) {
-      case DrumKit::Kick:  sound_.playBeatboxKick();  break;
-      case DrumKit::Snare: sound_.playBeatboxSnare(); break;
-      case DrumKit::Hihat: sound_.playBeatboxHihat(); break;
-      case DrumKit::Clap:  sound_.playBeatboxClap();  break;
-    }
-    return;
-  }
+  // Sprint 8 (Awake, Einheit 1): Beatbox ist aus der Hauptnavigation
+  // geparkt (siehe Menu::Screen) - die Touch-Zonen-Sonderbehandlung entfaellt
+  // hier entsprechend. Beatbox.* und Display::beatboxZoneAt()/
+  // showBeatboxGrid() bleiben unveraendert im Code erhalten.
 
   // Touch bleibt emotionale Interaktion: Charlie schaut zum Punkt + blinzelt.
   // (Buttons steuern die Menuefuehrung - siehe handleButtons().)
@@ -399,7 +386,7 @@ void App::handleButtons(std::uint32_t nowMs) {
   // Pocketindex (Menue-Icon-Tap oder BtnB-Halten, siehe oben). Innerhalb
   // eines Screens sind A/B/C screen-eigene Funktionen; welcher Screen aktiv
   // ist, entscheidet per if/else auf menu_.current().
-  if (menu_.current() == Screen::Productivity) {
+  if (menu_.current() == Screen::Focus) {
     // Ready (nichts laeuft): A/C waehlen das Werkzeug - ersetzt das
     // fruehere "BtnB halten" bei Ready (das ist jetzt der globale
     // Pocketindex-Fallback). Running/Paused/Done: A/C haben ihre eigene,
@@ -451,7 +438,7 @@ void App::handleButtons(std::uint32_t nowMs) {
       prod_.primaryAction(nowMs);
       screenRedraw_ = true;
     }
-  } else if (menu_.current() == Screen::Face) {
+  } else if (menu_.current() == Screen::Home) {
     // A/C: Charlie schaut kurz nach links/rechts und blinzelt - dieselbe
     // oeffentliche Face-API wie beim Touch-Blick (kein Face.cpp-Zugriff).
     if (interaction_.btnA()) {
@@ -465,123 +452,84 @@ void App::handleButtons(std::uint32_t nowMs) {
     if (input_.btnBClicked()) {
       persona_.pokeThoughtful();  // Face-Aktion: kurz nachdenklich (unveraendert)
     }
-  } else if (menu_.current() == Screen::Mood) {
-    // A/C: Charlies Stimmung direkt anstupsen - passt thematisch genau zum
-    // Mood-Screen. Kurze, transiente Pokes (dieselbe API wie die Online-
-    // Emotionsmomente), keine Dauerstimmung.
-    if (interaction_.btnA()) {
-      persona_.poke(Emotion::Sad, kSadMs);
-      screenRedraw_ = true;
-    }
-    if (interaction_.btnC()) {
-      persona_.poke(Emotion::Excited, kExcitedMs);
-      screenRedraw_ = true;
-    }
+  } else if (menu_.current() == Screen::Think) {
+    // A/C bewusst ohne eigene Funktion (wie zuvor auf Online) - BtnB-
+    // Verhalten inhaltlich unveraendert gegenueber vor Sprint 8, nur jetzt
+    // ein eigener Hauptmodus statt eines Pocketindex-Screens unter vielen.
     if (input_.btnBClicked()) {
-      persona_.poke(Emotion::Curious, kCuriousMs);
-      flashActive_ = true;
-      screenFlashUntil_ = nowMs + 1000;
-      screenRedraw_ = true;
-    }
-  } else if (menu_.current() == Screen::Dice) {
-    // A/C: Modus wechseln (d6/d20/Muenze) - bewusst kein Reroll, nur
-    // Auswahl. B: wuerfeln/werfen (einziger Weg zu einem neuen Ergebnis).
-    if (interaction_.btnA()) {
-      dice_.cyclePrev();
-      screenRedraw_ = true;
-    }
-    if (interaction_.btnC()) {
-      dice_.cycleNext();
-      screenRedraw_ = true;
-    }
-    if (input_.btnBClicked()) {
-      dice_.roll();
-      screenRedraw_ = true;
-      sound_.playDiceRoll();
-    }
-  } else if (menu_.current() == Screen::FocusCard) {
-    // A/C: Kategorie wechseln (Focus/Break/Reset) - bewusst kein neuer Zug.
-    // B: Karte ziehen (einziger Weg zu einem neuen Prompt).
-    if (interaction_.btnA()) {
-      card_.cyclePrev();
-      screenRedraw_ = true;
-    }
-    if (interaction_.btnC()) {
-      card_.cycleNext();
-      screenRedraw_ = true;
-    }
-    if (input_.btnBClicked()) {
-      card_.draw();
-      screenRedraw_ = true;
-      sound_.playCardDraw();
-    }
-  } else if (menu_.current() == Screen::Beatbox) {
-    // Sprint 7 (Beatbox Touch-Zonen): Hits laufen ausschliesslich ueber
-    // Touch-Zonen (siehe handleInput()) - A/B/C bewusst ohne eigene
-    // Funktion auf diesem Screen, kein zweiter Weg zum selben Hit.
-  } else if (menu_.current() == Screen::EightBall) {
-    // A/C bewusst ohne eigene Funktion (wie Beatbox) - eine Frage stellt
-    // man nur auf eine Art. B: neue Antwort ziehen.
-    if (input_.btnBClicked()) {
-      eightBall_.ask();
-      screenRedraw_ = true;
-      sound_.playEightBallAsk();
-    }
-  } else if (input_.btnBClicked()) {
-    // Clock/Online/Settings/Info: A/C bewusst (noch) ohne eigene Funktion -
-    // BtnB-Verhalten inhaltlich unveraendert gegenueber vor Sprint 7, nur
-    // jetzt konsequent ueber btnBClicked() statt der reinen Druck-Flanke.
-    if (menu_.current() == Screen::Online && network_.online()) {
-      // Bridge ok -> Thought holen; sonst (unbekannt/down) erst /health pingen.
-      // "checking"/"waiting..." sind die sichtbare Rueckmeldung.
-      if (online_.state() == BridgeState::Ok) {
-        online_.requestThought();
+      if (network_.online()) {
+        // Bridge ok -> Thought holen; sonst (unbekannt/down) erst /health
+        // pingen. "checking"/"waiting..." sind die sichtbare Rueckmeldung.
+        if (online_.state() == BridgeState::Ok) {
+          online_.requestThought();
+        } else {
+          online_.requestPing();
+        }
+        screenRedraw_ = true;
       } else {
-        online_.requestPing();
-      }
-      screenRedraw_ = true;
-    } else if (menu_.current() == Screen::Settings) {
-      // Sprint 5: BtnB = Sound umschalten; beim Einschalten kurze Hoerprobe.
-      sound_.setEnabled(!sound_.enabled());
-      if (sound_.enabled()) sound_.playTimerDone();
-      screenRedraw_ = true;
-    } else {
-      if (menu_.current() == Screen::Online) {
         network_.retry();  // WLAN offline: BtnB = Verbindungs-Retry
-      } else {
-        // E4B: BtnB auf Clock/Info -> kurzer Curious-Moment (sichtbar z. B.
-        // beim Rueckwechsel zum Face).
-        persona_.poke(Emotion::Curious, kCuriousMs);
+        flashActive_ = true;
+        screenFlashUntil_ = nowMs + 1000;
+        screenRedraw_ = true;
       }
-      flashActive_ = true;  // kurze "ok"-Rueckmeldung
-      screenFlashUntil_ = nowMs + 1000;
+    }
+  } else if (menu_.current() == Screen::System) {
+    // Sprint 8 (Awake, Einheit 1): System buendelt Status(Uptime)/Settings/
+    // Info als EIN Hauptmodus - A/C wechseln nur die interne Unterseite
+    // (systemPage_), dasselbe Muster wie Productivity/Focus im Ready-
+    // Zustand. Kein zweiter Pocketindex-artiger Mechanismus noetig.
+    if (interaction_.btnA()) {
+      systemPage_ = (systemPage_ + kSystemPageCount - 1) % kSystemPageCount;
       screenRedraw_ = true;
     }
+    if (interaction_.btnC()) {
+      systemPage_ = (systemPage_ + 1) % kSystemPageCount;
+      screenRedraw_ = true;
+    }
+    if (input_.btnBClicked()) {
+      if (systemPage_ == 1) {
+        // Settings-Seite: Sound umschalten; beim Einschalten kurze
+        // Hoerprobe - inhaltlich unveraendert gegenueber vor Sprint 8.
+        sound_.setEnabled(!sound_.enabled());
+        if (sound_.enabled()) sound_.playTimerDone();
+      } else {
+        // Status(Uptime)/Info-Seite: kurzer Curious-Moment - inhaltlich
+        // unveraendert gegenueber dem frueheren Clock/Info-Verhalten.
+        persona_.poke(Emotion::Curious, kCuriousMs);
+        flashActive_ = true;
+        screenFlashUntil_ = nowMs + 1000;
+      }
+      screenRedraw_ = true;
+    }
+  } else if (menu_.current() == Screen::Care) {
+    // Sprint 8 (Awake, Einheit 1): Care ist bewusst ein Stub - keine
+    // Reminder-Logik, keine Aktion auf A/B/C (folgt in einer spaeteren
+    // Einheit, siehe Behavior-Engine-Vorschlag).
   }
 }
 
 void App::renderScreen(std::uint32_t nowMs) {
   const Screen s = menu_.current();
 
-  // Clock aktualisiert sich sekundenweise.
-  if (s == Screen::Clock) {
+  // System-Status-Unterseite (Uptime) aktualisiert sich sekundenweise.
+  if (s == Screen::System && systemPage_ == 0) {
     const std::uint32_t sec = nowMs / 1000;
     if (sec != lastUptimeSec_) {
       lastUptimeSec_ = sec;
       screenRedraw_ = true;
     }
   }
-  // Productivity aktualisiert sich sekuendlich (laufende Timer).
-  if (s == Screen::Productivity) {
+  // Focus aktualisiert sich sekuendlich (laufende Timer).
+  if (s == Screen::Focus) {
     const std::uint32_t sec = prod_.displaySeconds();
     if (sec != lastProdSec_) {
       lastProdSec_ = sec;
       screenRedraw_ = true;
     }
   }
-  // Online-Screen aktualisiert sich bei WiFi-/Bridge-/Thought-Statuswechsel
-  // oder neuem Thought-Text (alles kombiniert in einem Vergleichswert).
-  if (s == Screen::Online) {
+  // Think aktualisiert sich bei WiFi-/Bridge-/Thought-Statuswechsel oder
+  // neuem Thought-Text (alles kombiniert in einem Vergleichswert).
+  if (s == Screen::Think) {
     const int ns = ((static_cast<int>(network_.state()) * 8 +
                      static_cast<int>(online_.state())) * 8 +
                     static_cast<int>(online_.thoughtState())) * 256 +
@@ -613,19 +561,16 @@ void App::renderScreen(std::uint32_t nowMs) {
   screenRedraw_ = false;
   lastRenderedScreen_ = static_cast<int>(s);
 
-  // Je Screen genau ein Text-Widget (Face wird nicht hier gezeichnet).
+  // Je Modus genau ein Text-Widget (Home wird nicht hier gezeichnet, siehe
+  // loop()). Dice/FocusCard/Beatbox/EightBall sind aus der Navigation
+  // geparkt (siehe Menu::Screen) - ihre render*Widget()-Funktionen bleiben
+  // unten im Code stehen, werden hier aber bewusst nicht mehr angesprungen.
   switch (s) {
-    case Screen::Clock:        renderClockWidget(nowMs);   break;
-    case Screen::Mood:         renderMoodWidget();         break;
-    case Screen::Online:       renderOnlineWidget();       break;
-    case Screen::Productivity: renderProductivityWidget(); break;
-    case Screen::Settings:     renderSettingsWidget();     break;
-    case Screen::Info:         renderInfoWidget();         break;
-    case Screen::Dice:         renderDiceWidget();         break;
-    case Screen::FocusCard:    renderFocusCardWidget();    break;
-    case Screen::Beatbox:      renderBeatboxWidget();      break;
-    case Screen::EightBall:    renderEightBallWidget();    break;
-    default:                   break;
+    case Screen::Think:  renderOnlineWidget();       break;
+    case Screen::Focus:  renderProductivityWidget(); break;
+    case Screen::System: renderSystemWidget(nowMs);  break;
+    case Screen::Care:   renderCareWidget();         break;
+    default:              break;
   }
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
   // Teil desselben Redraw-Aufrufs wie showScreen()/drawNavBar() (kein
@@ -671,10 +616,11 @@ void App::renderClockWidget(std::uint32_t nowMs) {
            static_cast<unsigned>((t / 60) % 60),
            static_cast<unsigned>(t % 60));
   display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
-  // A/C bewusst ohne eigene Funktion auf Clock (noch keine passende Idee) -
-  // leere Hinweise zeichnen keine Pfeile mehr vor. BtnB loest im else-Zweig
-  // von handleButtons() einen kurzen "Curious"-Moment aus - ehrlich benannt.
-  display_.drawNavBar(menu_.index(), Menu::count(), "", "B: hey", "");
+  // Sprint 8 (Awake, Einheit 1): A/C wechseln jetzt die System-Unterseite
+  // (Status/Settings/Info, siehe App::handleButtons()) statt ohne Funktion
+  // zu sein - Hinweise muessen das ehrlich zeigen. BtnB loest weiterhin
+  // einen kurzen "Curious"-Moment aus (unveraendert).
+  display_.drawNavBar(menu_.index(), Menu::count(), "A: prev", "B: hey", "C: next");
 }
 
 void App::renderMoodWidget() {
@@ -778,16 +724,37 @@ void App::renderSettingsWidget() {
   // Konstante; Persistenz ist bewusst noch nicht dran (Runtime-Setting).
   display_.showScreen("settings", sound_.enabled() ? "sound on" : "sound off",
                       "");
-  // A/C bewusst ohne eigene Funktion auf Settings (nur eine Option bisher).
-  display_.drawNavBar(menu_.index(), Menu::count(), "", "B: toggle", "");
+  // Sprint 8 (Awake, Einheit 1): A/C wechseln die System-Unterseite (siehe
+  // renderClockWidget()) - "B: toggle" bleibt die einzige Aktion hier.
+  display_.drawNavBar(menu_.index(), Menu::count(), "A: prev", "B: toggle", "C: next");
 }
 
 void App::renderInfoWidget() {
   display_.showScreen(config::kAppName, config::kAppCodename,
                       flashActive_ ? "ok" : config::kAppVersion);
-  // A/C bewusst ohne eigene Funktion auf Info. BtnB loest im else-Zweig von
-  // handleButtons() einen kurzen "Curious"-Moment aus - ehrlich benannt.
-  display_.drawNavBar(menu_.index(), Menu::count(), "", "B: hey", "");
+  // Sprint 8 (Awake, Einheit 1): A/C wechseln die System-Unterseite (siehe
+  // renderClockWidget()). BtnB loest weiterhin einen kurzen "Curious"-
+  // Moment aus (unveraendert).
+  display_.drawNavBar(menu_.index(), Menu::count(), "A: prev", "B: hey", "C: next");
+}
+
+void App::renderSystemWidget(std::uint32_t nowMs) {
+  // Sprint 8 (Awake, Einheit 1): System ist EIN Hauptmodus mit drei
+  // Unterseiten (Status/Uptime, Settings/Sound, Info/Version) statt drei
+  // eigener Pocketindex-Karten. Wiederverwendet die bestehenden, unveraen-
+  // derten Widget-Funktionen 1:1 - nur der Aufruf ist jetzt bedingt.
+  switch (systemPage_) {
+    case 0:  renderClockWidget(nowMs);  break;
+    case 1:  renderSettingsWidget();    break;
+    default: renderInfoWidget();        break;
+  }
+}
+
+void App::renderCareWidget() {
+  // Sprint 8 (Awake, Einheit 1): bewusster Platzhalter - keine Reminder-
+  // Logik, keine neuen Aktionen. A/B/C bleiben ehrlich leer.
+  display_.showScreen("care", "steht bereit.", "bald mehr hier.");
+  display_.drawNavBar(menu_.index(), Menu::count(), "", "", "");
 }
 
 void App::renderDiceWidget() {

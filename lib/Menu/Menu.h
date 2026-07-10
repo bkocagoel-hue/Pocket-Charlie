@@ -5,20 +5,23 @@
 //  Haelt nur den aktuellen Screen und den Wechsel dazwischen. Bewusst getrennt
 //  von Emotion/Persona: die Emotion Engine soll NICHT zur Menue-Logik werden.
 //  Header-only, keine Abhaengigkeiten - leicht testbar/erweiterbar.
+//
+//  Sprint 8 (Awake - Charlie Core Reboot, Einheit 1): von 11 gleichrangigen
+//  Screens (App-Drawer-Gefuehl) auf fuenf Companion-Modi reduziert. Dice/
+//  FocusCard/Beatbox/EightBall sowie Clock/Mood sind bewusst aus der
+//  Navigation genommen (geparkt, Code bleibt in lib/ erhalten) - Clock
+//  (Uptime) lebt als Unterseite in System weiter, Settings/Info ebenso.
 // ============================================================================
 
 #include <cstdint>
 
 namespace pc {
 
-enum class Screen : std::uint8_t {
-  Face = 0, Clock, Mood, Online, Productivity, Settings, Info, Dice, FocusCard,
-  Beatbox, EightBall
-};
+enum class Screen : std::uint8_t { Home = 0, Think, Focus, Care, System };
 
 class Menu {
  public:
-  void begin() { cur_ = Screen::Face; }
+  void begin() { cur_ = Screen::Home; }
 
   void next() { cur_ = static_cast<Screen>((static_cast<int>(cur_) + 1) % kCount); }
   void prev() {
@@ -44,30 +47,18 @@ class Menu {
   // Display - Display bleibt reine Render-Schicht und bekommt nur fertige
   // Strings, kennt Menu/Screen bewusst nicht (Single Responsibility).
   static const char* const* cardLines(int idx, int* outCount) {
-    static const char* kFace[] = {"Charlie home -", "mood & idle", "companion."};
-    static const char* kClock[] = {"Uptime -", "how long Charlie's", "been awake."};
-    static const char* kMood[] = {"Charlie's mood -", "light & current", "state."};
-    static const char* kOnline[] = {"Local AI bridge -", "ollama / mock,", "thought source."};
-    static const char* kProductivity[] = {"Focus tools -", "stopwatch, timer &", "pomodoro flow."};
-    static const char* kSettings[] = {"Sound &", "preferences."};
-    static const char* kInfo[] = {"Version &", "system info."};
-    static const char* kDice[] = {"Quick decisions -", "d6, d20 or a", "coin flip."};
-    static const char* kFocusCard[] = {"A quick prompt -", "focus, break or", "reset, your call."};
-    static const char* kBeatbox[] = {"Tiny drum machine -", "kick, snare, hihat", "or clap."};
-    static const char* kEightBall[] = {"Ask a question -", "get a wildly", "unreliable answer."};
+    static const char* kHome[] = {"Charlie home -", "mood & idle", "companion."};
+    static const char* kThink[] = {"Local AI bridge -", "ollama / mock,", "thought source."};
+    static const char* kFocus[] = {"Focus tools -", "stopwatch, timer &", "pomodoro flow."};
+    static const char* kCare[] = {"Care steht bereit -", "bald mehr hier."};
+    static const char* kSystem[] = {"System -", "sound, uptime &", "version info."};
     switch (static_cast<Screen>(idx)) {
-      case Screen::Face:         *outCount = 3; return kFace;
-      case Screen::Clock:        *outCount = 3; return kClock;
-      case Screen::Mood:         *outCount = 3; return kMood;
-      case Screen::Online:       *outCount = 3; return kOnline;
-      case Screen::Productivity: *outCount = 3; return kProductivity;
-      case Screen::Settings:     *outCount = 2; return kSettings;
-      case Screen::Info:         *outCount = 2; return kInfo;
-      case Screen::Dice:         *outCount = 3; return kDice;
-      case Screen::FocusCard:    *outCount = 3; return kFocusCard;
-      case Screen::Beatbox:      *outCount = 3; return kBeatbox;
-      case Screen::EightBall:    *outCount = 3; return kEightBall;
-      default:                   *outCount = 0; return nullptr;
+      case Screen::Home:   *outCount = 3; return kHome;
+      case Screen::Think:  *outCount = 3; return kThink;
+      case Screen::Focus:  *outCount = 3; return kFocus;
+      case Screen::Care:   *outCount = 2; return kCare;
+      case Screen::System: *outCount = 3; return kSystem;
+      default:             *outCount = 0; return nullptr;
     }
   }
 
@@ -105,23 +96,17 @@ class Menu {
  private:
   static const char* screenName(Screen s) {
     switch (s) {
-      case Screen::Face:         return "Face";
-      case Screen::Clock:        return "Clock";
-      case Screen::Mood:         return "Mood";
-      case Screen::Online:       return "Online";
-      case Screen::Productivity: return "Productivity";
-      case Screen::Settings:     return "Settings";
-      case Screen::Info:         return "Info";
-      case Screen::Dice:         return "Dice";
-      case Screen::FocusCard:    return "Focus Card";
-      case Screen::Beatbox:      return "Beatbox";
-      case Screen::EightBall:    return "8-Ball";
-      default:                   return "?";
+      case Screen::Home:   return "Home";
+      case Screen::Think:  return "Think";
+      case Screen::Focus:  return "Focus";
+      case Screen::Care:   return "Care";
+      case Screen::System: return "System";
+      default:             return "?";
     }
   }
 
-  static constexpr int kCount = 11;
-  Screen cur_ = Screen::Face;
+  static constexpr int kCount = 5;
+  Screen cur_ = Screen::Home;
   bool pocketOpen_ = false;
   int pocketIndex_ = 0;
 };

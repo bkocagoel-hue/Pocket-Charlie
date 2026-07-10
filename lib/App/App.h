@@ -61,6 +61,11 @@ class App {
   void renderFocusCardWidget();
   void renderBeatboxWidget();
   void renderEightBallWidget();
+  // Sprint 8 (Awake, Einheit 1): Care-Stub und System-Seiten-Dispatcher
+  // (System buendelt Status/Settings/Info als EIN Hauptmodus, keine drei
+  // eigenen Karten - siehe systemPage_ unten).
+  void renderCareWidget();
+  void renderSystemWidget(std::uint32_t nowMs);
 
   Display display_;  // Screen-Grundfunktionen / Boot-Screen
   Input   input_;    // Touch + Buttons
@@ -103,6 +108,13 @@ class App {
   // jedes Widgets mit "ok", obwohl der Icon-Tap gar keine Screen-Aktion ist).
   bool menuIconFlash_ = false;
   std::uint32_t menuIconFlashUntil_ = 0;
+
+  // Sprint 8 (Awake, Einheit 1): interne Unterseite des System-Modus (0 =
+  // Status/Uptime, 1 = Settings/Sound, 2 = Info/Version) - A/C wechseln nur
+  // innerhalb von System, dasselbe "screen-eigene Tasten"-Muster wie schon
+  // bei Productivity (Ready-Zustand). Kein eigener Menu::Screen-Eintrag pro
+  // Unterseite, damit System EIN Hauptmodus bleibt (kein 11-Karten-Rueckfall).
+  int systemPage_ = 0;
 
   // Sprint 7 (Pocketindex - Rolodex Notebook): eigener Redraw-Trigger fuer
   // den Pocketindex, getrennt von screenRedraw_ (der gehoert den Widget-
