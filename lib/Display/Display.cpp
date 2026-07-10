@@ -91,20 +91,21 @@ void Display::showBootScreen() {
 }
 
 void Display::showScreen(const char* title, const char* mainText,
-                         const char* sub) {
+                         const char* sub, std::uint16_t accentColor) {
   clear();
   const int32_t cx = M5.Display.width() / 2;
   const int32_t cy = M5.Display.height() / 2;
   const int32_t maxTextWidth = M5.Display.width() - 2 * kSideMargin;
 
-  // Titel klein oben, in Charlies violettem Akzent.
+  // Titel klein oben, in Charlies Akzentfarbe (Default Violett; System-
+  // Widgets uebergeben Gruen, siehe Display.h).
   M5.Display.setTextDatum(top_center);
-  M5.Display.setTextColor(config::kColorEye, config::kColorBackground);
+  M5.Display.setTextColor(accentColor, config::kColorBackground);
   M5.Display.setTextSize(2);
   M5.Display.drawString(title, cx, 30);
 
-  // dezente violette Akzentlinie
-  M5.Display.fillRect(cx - 42, 60, 84, 3, config::kColorEye);
+  // dezente Akzentlinie in derselben Farbe.
+  M5.Display.fillRect(cx - 42, 60, 84, 3, accentColor);
 
   // Hauptinfo gross, zentriert, weiss. Groesse richtet sich nach der
   // tatsaechlichen Pixelbreite (nicht nur Zeichenanzahl), damit z. B. lange

@@ -43,6 +43,17 @@ const char* chipForEmotion(Emotion e) {
     default:                  return "";
   }
 }
+
+// Sprint 8 (Awake, Einheit 4 - Diagnostic Green v1): Akzentfarbe fuer die
+// System-Widgets (Clock/Settings/Info, nur ueber renderSystemWidget()
+// erreichbar) - Gruen statt Charlies Violett, rein ueber das Compile-Time-
+// Flag config::kEnableDiagnosticGreen gesteuert. Alle anderen Screens (Home,
+// Think, Focus, Care) und der Reaction-Chip bleiben unberuehrt (siehe
+// PcConfig.h).
+std::uint16_t systemAccentColor() {
+  return config::kEnableDiagnosticGreen ? config::kColorAccentSystem
+                                        : config::kColorEye;
+}
 }  // namespace
 
 void App::setup() {
@@ -552,7 +563,8 @@ void App::renderClockWidget(std::uint32_t nowMs) {
            static_cast<unsigned>(t / 3600),
            static_cast<unsigned>((t / 60) % 60),
            static_cast<unsigned>(t % 60));
-  display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "");
+  display_.showScreen("uptime", uptimeBuf_, flashActive_ ? "ok" : "",
+                      systemAccentColor());
   // Sprint 8 (Awake, Einheit 1): A/C wechseln jetzt die System-Unterseite
   // (Status/Settings/Info, siehe App::handleButtons()) statt ohne Funktion
   // zu sein - Hinweise muessen das ehrlich zeigen. BtnB loest weiterhin
@@ -660,7 +672,7 @@ void App::renderSettingsWidget() {
   // Bewusst schlicht: eine Einstellung, ein Toggle. Pomodoro 25/5 bleibt
   // Konstante; Persistenz ist bewusst noch nicht dran (Runtime-Setting).
   display_.showScreen("settings", sound_.enabled() ? "sound on" : "sound off",
-                      "");
+                      "", systemAccentColor());
   // Sprint 8 (Awake, Einheit 1): A/C wechseln die System-Unterseite (siehe
   // renderClockWidget()) - "B: toggle" bleibt die einzige Aktion hier.
   display_.drawNavBar(menu_.index(), Menu::count(), "A: prev", "B: toggle", "C: next");
@@ -668,7 +680,8 @@ void App::renderSettingsWidget() {
 
 void App::renderInfoWidget() {
   display_.showScreen(config::kAppName, config::kAppCodename,
-                      flashActive_ ? "ok" : config::kAppVersion);
+                      flashActive_ ? "ok" : config::kAppVersion,
+                      systemAccentColor());
   // Sprint 8 (Awake, Einheit 1): A/C wechseln die System-Unterseite (siehe
   // renderClockWidget()). BtnB loest weiterhin einen kurzen "Curious"-
   // Moment aus (unveraendert).

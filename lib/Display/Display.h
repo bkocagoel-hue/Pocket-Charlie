@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "PcConfig.h"
+
 namespace pc {
 
 class Display {
@@ -24,7 +26,12 @@ class Display {
   void showBootScreen();
 
   // Generischer Text-Screen (Sprint 3): Titel klein + Hauptinfo gross + Sub.
-  void showScreen(const char* title, const char* mainText, const char* sub);
+  // Sprint 8 (Awake, Einheit 4 - Diagnostic Green v1): "accentColor" faerbt
+  // Titel + Akzentlinie, Default = Charlies Violett (kColorEye) - bestehende
+  // Aufrufer (Think/Focus/Care) bleiben unveraendert, ohne den Parameter
+  // anzugeben. Nur die System-Widgets uebergeben bewusst Gruen.
+  void showScreen(const char* title, const char* mainText, const char* sub,
+                  std::uint16_t accentColor = config::kColorEye);
 
   // Navigations-Hinweise (Sprint 5, Sprint 7 Fix): dezente Leiste am
   // unteren Rand, direkt ueber den A/B/C-Touch-Zonen. Punktreihe = Screens

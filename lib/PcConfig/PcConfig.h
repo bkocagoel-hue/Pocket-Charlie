@@ -55,6 +55,17 @@ constexpr std::uint16_t kColorEye   = 0x8B77;  // warmes Violett: Augen/Iris
 constexpr std::uint16_t kColorPupil = 0xFFFF;  // Weiss: Pupille
 constexpr std::uint16_t kColorGlint = 0xFFFF;  // Weiss: Glanzpunkt
 
+// --- Sprint 8 (Awake, Einheit 4 - Diagnostic Green v1) -------------------
+// Zweite bewusste Bedeutungsfarbe (kein globales Theme): Violett (kColorEye)
+// bleibt "Charlie fuehlt / Companion / Emotion" - ueberall, auch weiterhin
+// am Reaction-Chip (siehe App.cpp chipForEmotion()). Gruen ist ausschliess-
+// lich "System / Maschine / Diagnose", nur auf den System-Widgets genutzt
+// (siehe App::renderClockWidget()/renderSettingsWidget()/renderInfoWidget(),
+// alle nur ueber renderSystemWidget() erreichbar). Reines Compile-Time-Flag
+// wie kEnableMoustache - kein Runtime-Theme-State, kein Settings-Toggle.
+constexpr bool kEnableDiagnosticGreen = true;
+constexpr std::uint16_t kColorAccentSystem = 0x5E2E;  // dezentes Phosphor-Gruen
+
 // --- Visuelle Identitaet: Schnurrbart (optionales Zukunfts-Feature) ------
 // Der Schnurrbart bleibt eine charmante Idee, ist aber auf dem kleinen Display
 // riskant (wirkt mangels Nase wie eine Nase/ein Mund). In Sprint 3 hat statt-
