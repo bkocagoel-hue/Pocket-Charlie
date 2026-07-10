@@ -140,6 +140,13 @@ class App {
   // Sprint 5: Productivity-Screen zeichnet sekuendlich neu (wie Clock).
   std::uint32_t lastProdSec_ = 0;
 
+  // Sprint 8 (Awake, Einheit 3 - Emotion Visibility v1): letzte Emotion, fuer
+  // die der Reaction-Chip gezeichnet wurde - Redraw-Trigger auf Nicht-Home-
+  // Modi, wenn sich persona_.current() aendert (siehe renderScreen()). Kein
+  // eigenes Timing: der Chip folgt direkt Persona, verschwindet automatisch
+  // mit Neutral.
+  Emotion lastChipEmotion_ = Emotion::Neutral;
+
   // Spaetere Subsysteme reihen sich hier ein, z. B.:
   //   WifiService wifi_;   // Netzwerk (Sprint 0/3)
 };

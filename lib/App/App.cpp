@@ -18,6 +18,31 @@ constexpr std::uint32_t kCuriousMs  = 3000;  // BtnB auf Text-Screens
 // Sprint 8 (Awake, Einheit 1): Anzahl interner System-Unterseiten
 // (0 = Status/Uptime, 1 = Settings/Sound, 2 = Info/Version).
 constexpr int kSystemPageCount = 3;
+
+// Sprint 8 (Awake, Einheit 3 - Emotion Visibility v1): Emotion -> kurzer
+// Charlie-Voice-Chip fuer Nicht-Home-Modi (siehe renderScreen()). Bewusst
+// nur bestehende Emotionen (kein "Proud"), bewusst kein rohes Debug-Tag wie
+// "~curious". Neutral -> "" (kein Chip, Home bleibt ohnehin unberuehrt -
+// diese Funktion wird nur auf Nicht-Home-Screens aufgerufen). Sprint 8,
+// Einheit 3 (Nachschaerfen): auf 3-5 Zeichen gekuerzt, damit die gefuellte
+// Pill (siehe Display::drawReactionChip()) bei Textgroesse 1 kompakt bleibt
+// und reichlich Abstand zur Positions-Punktreihe haelt.
+const char* chipForEmotion(Emotion e) {
+  switch (e) {
+    case Emotion::Happy:      return "nice";
+    case Emotion::Tired:      return "low";
+    case Emotion::Thoughtful: return "denkt";
+    case Emotion::Annoyed:    return "bruh";
+    case Emotion::Curious:    return "hm?";
+    case Emotion::Sad:        return "uff";
+    case Emotion::Sleeping:   return "zzz";
+    case Emotion::WakingUp:   return "boot";
+    case Emotion::Excited:    return "go!";
+    case Emotion::Confused:   return "lost";
+    case Emotion::Neutral:
+    default:                  return "";
+  }
+}
 }  // namespace
 
 void App::setup() {
@@ -408,6 +433,16 @@ void App::handleButtons(std::uint32_t nowMs) {
 void App::renderScreen(std::uint32_t nowMs) {
   const Screen s = menu_.current();
 
+  // Sprint 8 (Awake, Einheit 3 - Emotion Visibility v1): Emotionswechsel
+  // ausserhalb Home redraw-triggern, damit der Reaction-Chip aktuell bleibt,
+  // auch wenn gerade kein anderer Trigger greift. Direkt aus Persona
+  // abgeleitet, kein eigenes Timing - der Chip verschwindet automatisch mit
+  // Neutral (siehe chipForEmotion()/drawReactionChip()).
+  if (persona_.current() != lastChipEmotion_) {
+    lastChipEmotion_ = persona_.current();
+    screenRedraw_ = true;
+  }
+
   // System-Status-Unterseite (Uptime) aktualisiert sich sekundenweise.
   if (s == Screen::System && systemPage_ == 0) {
     const std::uint32_t sec = nowMs / 1000;
@@ -469,6 +504,11 @@ void App::renderScreen(std::uint32_t nowMs) {
     case Screen::Care:   renderCareWidget();         break;
     default:              break;
   }
+  // Sprint 8 (Awake, Einheit 3 - Emotion Visibility v1): Reaction-Chip nach
+  // dem Widget-Redraw, gleiches Muster wie drawMenuIcon() - kein Extra-Draw
+  // pro Frame. Nur auf Nicht-Home-Modi (renderScreen() laeuft fuer Home
+  // ohnehin nie, siehe loop()).
+  display_.drawReactionChip(chipForEmotion(persona_.current()));
   // Sprint 7, E1 (gefixt): Menue-Icon oben rechts auf allen Widget-Screens -
   // Teil desselben Redraw-Aufrufs wie showScreen()/drawNavBar() (kein
   // separater Extra-Draw pro Frame -> kein Flackern). "menuIconFlash_"

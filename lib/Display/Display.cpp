@@ -12,6 +12,10 @@ namespace {
 constexpr std::uint16_t kColorDim = 0x7BEF;
 // Luft zum Bildschirmrand, damit Text nie ganz an der Kante klebt.
 constexpr std::int32_t kSideMargin = 6;
+// Sprint 8, Einheit 3: gleiche Zeile wie die Positions-Punktreihe in
+// drawNavBar() - eine Quelle der Wahrheit, damit Chip und Dots nie
+// auseinanderdriften.
+constexpr std::int32_t kDotY = 205;
 
 // Kuerzt "text" bei der AKTUELL gesetzten Textgroesse schrittweise und
 // haengt "..." an, bis es in maxWidth passt (M5.Display.textWidth()).
@@ -135,14 +139,13 @@ void Display::drawNavBar(int index, int count, const char* aHint,
 
   // Punktreihe: ein Punkt je Screen, der aktuelle groesser + violett - reine
   // Positionsanzeige (Screenwechsel laeuft ueber den Pocketindex).
-  const int32_t dotY = 205;
   const int32_t gap = 14;
   int32_t x = cx - ((count - 1) * gap) / 2;
   for (int i = 0; i < count; ++i, x += gap) {
     if (i == index) {
-      M5.Display.fillCircle(x, dotY, 3, config::kColorEye);
+      M5.Display.fillCircle(x, kDotY, 3, config::kColorEye);
     } else {
-      M5.Display.fillCircle(x, dotY, 2, kColorDim);
+      M5.Display.fillCircle(x, kDotY, 2, kColorDim);
     }
   }
 
@@ -324,6 +327,35 @@ void Display::showBeatboxGrid(const char* const kitNames[4], int flashZone) {
     }
     M5.Display.drawString(label, zx + colW / 2, zy + rowH / 2);
   }
+}
+
+void Display::drawReactionChip(const char* text) {
+  if (text == nullptr || text[0] == '\0') return;  // Neutral -> kein Chip.
+  // Links neben der Punktreihe (dieselbe Zeile, kDotY) - auf allen Nicht-
+  // Home-Modi reichlich freier Platz, kollidiert nicht mit den mittig
+  // zentrierten Dots oder den A/B/C-Hints darunter (siehe drawNavBar()).
+  //
+  // Sprint 8, Einheit 3 (Nachschaerfen - Variante A "gefuellte Pill"):
+  // dieselbe Technik wie schon bei showBeatboxGrid()s Tap-Flash und
+  // showPocketindex()s Puls (fillRoundRect + invertierte Textfarbe) - kein
+  // neuer visueller Trick, nur an neuer Stelle wiederverwendet. Textgroesse
+  // bleibt bewusst 1 (siehe kPillH-Bemessung); die Pill-Faerbung liefert den
+  // Kontrast, keine groessere Schrift noetig - haelt genug Abstand zu den
+  // Dots auch bei laengeren Chip-Texten.
+  M5.Display.setTextSize(1);
+  const std::int32_t textW = M5.Display.textWidth(text);
+
+  constexpr std::int32_t kPadX  = 6;
+  constexpr std::int32_t kPillH = 14;
+  const std::int32_t pillW = textW + 2 * kPadX;
+  const std::int32_t pillX = kSideMargin;
+  const std::int32_t pillY = kDotY - kPillH / 2;
+
+  M5.Display.fillRoundRect(pillX, pillY, pillW, kPillH, kPillH / 2,
+                          config::kColorEye);
+  M5.Display.setTextDatum(middle_center);
+  M5.Display.setTextColor(config::kColorBackground, config::kColorEye);
+  M5.Display.drawString(text, pillX + pillW / 2, kDotY);
 }
 
 }  // namespace pc

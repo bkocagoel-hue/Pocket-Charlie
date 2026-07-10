@@ -90,6 +90,18 @@ class Display {
   // Frame (kein Flackern), gleiches Muster wie showPocketindex()s "pulse".
   void showBeatboxGrid(const char* const kitNames[4], int flashZone);
 
+  // Sprint 8 (Awake, Einheit 3 - Emotion Visibility v1): dezente Reaction-
+  // Chip-Pill links neben der Positions-Punktreihe, auf Nicht-Home-Modi.
+  // "text" kommt fertig gemappt vom Aufrufer (App: Emotion -> kurzer
+  // Charlie-Voice-Text) - Display kennt Persona/Emotion bewusst nicht
+  // (Single Responsibility, gleiches Prinzip wie showPocketindex()). Leerer/
+  // nullptr String zeichnet bewusst nichts (Neutral -> kein Chip). Gefuellte
+  // Pill (fillRoundRect + invertierte Textfarbe, Textgroesse bleibt 1) statt
+  // reinem Text - mehr Kontrast, gleiche Technik wie showBeatboxGrid()s Tap-
+  // Flash. Teil desselben Redraw-Aufrufs wie drawNavBar()/drawMenuIcon() -
+  // kein Extra-Draw pro Frame, kein Flackern.
+  void drawReactionChip(const char* text);
+
  private:
   void clear();
 
